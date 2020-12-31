@@ -15,7 +15,7 @@ export const useStyles = makeStyles(theme => ({
         width: "250px",
         [theme.breakpoints.up("md")]: {width: "300px"}
     },
-    menuIcon: {color: "white"},
+    menuIcon: {color: "white", marginLeft: ""},
     swipDrawer: {width: "250px"},
     drawerPaper: {width: "250px"},
     swipAvatarBox: {

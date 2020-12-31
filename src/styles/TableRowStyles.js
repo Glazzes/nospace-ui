@@ -8,18 +8,26 @@ export const useStyles = makeStyles( theme => ({
     },
     titleBox: {display: "flex"},
     goBack: {height: "50px", backgroundColor: blueGrey[100], cursor: "pointer"},
-    folderIcon: {color: yellow[500]},
+    folderIcon: {color: yellow[500], marginRight: "10px"},
     folderRow: {
         "&:hover": {backgroundColor: blueGrey[100], cursor: "pointer"}
     },
     warning: {
-        width: "60vw",
-        margin: "auto auto",
-        backgroundColor: "white",
+        margin: "45px",
+        padding: "10px"
+    },
+    warningContainer: {
         padding: "10px"
     },
     warningBox: {
+        width: "80%",
         display: "flex",
-        justifyContent: "space-between"
-    }
+        justifyContent: "space-between",
+        margin: "20px auto 0 auto"
+    },
+    link: {
+        textDecoration: "none",
+        color: "rgb(61, 61, 61)"
+    },
+    fileIcon:{marginRight: "10px"}
 }))

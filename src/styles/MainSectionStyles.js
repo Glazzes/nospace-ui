@@ -14,7 +14,9 @@ export const useStyles = makeStyles(theme => ({
     },
     searchInput: {
         [theme.breakpoints.up("md")]: {width: "67vw"},
-        [theme.breakpoints.down("md")]: {width: "100%"}
+        [theme.breakpoints.down("md")]: {
+            width: "95vw"
+        }
     },
     url: {
         marginTop: "10px",
@@ -29,22 +31,24 @@ export const useStyles = makeStyles(theme => ({
     },
     breadCrumb: {
         cursor: "pointer",
-        "&:hover": {color: blue[900]}
+        "&:hover": {color: blue[900]},
+        [theme.breakpoints.down("md")]: {
+           marginLeft: "2.5vw"
+        }
     },
     modal: {
-        width: "60vw",
-        margin: "auto auto auto auto",
-        backgroundColor: "white",
-        boxShadow: "0 0 10px",
+        margin: "45px",
         padding: "10px"
     },
     modalInput: {
-        display: "block",
-        width: "80vw"
+        width: "100%"
     },
     modalBox: {
         display: "flex",
         justifyContent: "space-between",
         marginTop: "20px"
+    },
+    modalContainer: {
+        padding:"10px"
     }
 }))

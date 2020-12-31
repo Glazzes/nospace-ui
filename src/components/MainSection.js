@@ -1,4 +1,16 @@
-import { Box, Breadcrumbs, Button, Fade, Menu, MenuItem, Modal, TextField, Typography } from '@material-ui/core'
+import {
+    Box,
+    Breadcrumbs,
+    Button,
+    Container,
+    Fade,
+    Menu,
+    MenuItem,
+    Modal,
+    Paper,
+    TextField,
+    Typography
+} from '@material-ui/core'
 import { ExpandMore, NavigateNext } from '@material-ui/icons';
 import React, { useContext, useEffect, useReducer } from 'react';
 import {useStyles} from '../styles/MainSectionStyles';
@@ -29,7 +41,8 @@ const ACTIONS = {
     FALIED_UPLOAD: "failed_upload",
     FAILED_CONTENT_REQUEST: "failed_content_request",
     FAILED_FOLDER_CREATION: "failed_folder_creation",
-    REMOVE_FOLDER: "remove_folder"
+    REMOVE_FOLDER: "remove_folder",
+    REMOVE_FILE: "remove_file"
 }
 
 function reducer(state, action){
@@ -64,11 +77,13 @@ function reducer(state, action){
             return {...state, files: action.files, renderFiles: action.files};
 
         case ACTIONS.FILTER_FILES:
-            const filteredFiles = state.files.filter( file => file.filename.includes(action.value))
+            const filteredFiles = state.files
+                .filter( file => file.filename.toLocaleLowerCase().includes(action.value.toLocaleLowerCase()))
             return {...state, renderFiles: filteredFiles};
 
         case ACTIONS.FILTER_FOLDERS:
-            const filteredFolders = state.folders.filter( folder => folder.folderName.includes(action.value))
+            const filteredFolders = state.folders
+                .filter( folder => folder.folderName.toLocaleLowerCase().includes(action.value.toLocaleLowerCase()))
             return {...state, renderFolders: filteredFolders};
 
         case ACTIONS.UPDATE_NEW_FOLDERNAME:
@@ -108,8 +123,26 @@ function reducer(state, action){
             }
 
         case ACTIONS.REMOVE_FOLDER:
-            const updatedFolders = state.folders.filter(folder => folder.id != action.folderId);
-            return {...state, folders: updatedFolders, renderFolders: updatedFolders};
+            const updatedFolders = state.folders.filter(folder => folder.id !== action.folderId);
+            return {...state, folders: updatedFolders, renderFolders: updatedFolders,
+            snackContent: {content: `${action.folderName} folder was successfuly deleted`, type: "success"},
+            openSnack: true};
+
+        case ACTIONS.REMOVE_FOLDER_FAILURE:
+            return {...state, snackContent: 
+                {content: `${action.folderName} could no be deleted, try later.`, type: "error"},
+                openSnack: true}
+
+        case ACTIONS.REMOVE_FILE:
+            const updatedFiles = state.files.filter(file => file.id !== action.fileId);
+            return {...state, files: updatedFiles, renderFiles: updatedFiles,
+            snackContent: {content: `${action.filename} was deleted successfuly`, type: "success"},
+            openSnack: true};
+
+        case ACTIONS.REMOVE_FILE_FAILURE:
+            return {...state, snackContent: 
+                {content: `${action.folderName} couldn't be deleted, try later.`, type: "error"},
+                openSnack: true}
 
         default:
             return state;
@@ -151,19 +184,20 @@ const SearchBar = () => {
     }
 
     const uploadFiles = (event) => {
-        console.log("File uploaded")
-
+        let formData = new FormData();
         Array.from(event.target.files).forEach( file => {
-            fileUpload(compState.root_id, file)
-                .then( response => dispatch({type: ACTIONS.UPLOADED_FILES, files: response.data}))
-                .catch( _ => dispatch({type: ACTIONS.FALIED_UPLOAD}) )
-        } )
+            console.log(file)
+            formData.append("file", file)
+        });
+
+        fileUpload(compState.rootId, formData)
+            .then(response => dispatch({type: ACTIONS.UPLOADED_FILES, files: response.data}) )
+            .catch(_ => dispatch({type: ACTIONS.FALIED_UPLOAD}));
     }
 
     const newFolder = () => {
         createNewFolder(compState.rootId, compState.newFolderName)
             .then(response => {
-                console.log("current folder id " + compState.rootId)
                 dispatch({type: ACTIONS.NEW_FOLDER, newFolder: response.data});
             })
             .catch(_ => dispatch({type: ACTIONS.FAILED_FOLDER_CREATION}))
@@ -173,12 +207,11 @@ const SearchBar = () => {
         getCurrentUser()
             .then( response => setState({...state, currentUser: response.data}) )
             .catch( _ => console.log("Couldnt get the files") )
-    }, [] )
+    }, [])
 
     useEffect( () => {
         getCurrentContent(compState.routes)
             .then(response => {
-                console.log(response.data);
                 dispatch({type: ACTIONS.SET_ROOT_ID, id: response.data.id})
                 dispatch({type: ACTIONS.SET_FOLDERS, folders: response.data.subFolders})
                 dispatch({type: ACTIONS.SET_FILES, files: response.data.files})
@@ -201,7 +234,7 @@ const SearchBar = () => {
             >
                 <input id="fileUpload" type="file" multiple hidden onChange={uploadFiles} />
                 <label htmlFor="fileUpload">
-                    <MenuItem>Upload file</MenuItem>
+                    <MenuItem onClick={() => dispatch({type: ACTIONS.CLOSE_MENU})}>Upload file</MenuItem>
                 </label>
                 <MenuItem onClick={() => dispatch({type: ACTIONS.OPEN_NEW_FOLDER})}>New folder</MenuItem>
             </Menu>
@@ -223,23 +256,23 @@ const SearchBar = () => {
             files={compState.renderFiles} folders={compState.renderFolders}/>
 
         <Modal open={compState.openNewFolder}
-            onClose={() => dispatch({type: ACTIONS.CLOSE_NEW_FOLDER})}>
+            onClose={() => dispatch({type: ACTIONS.CLOSE_NEW_FOLDER})}
+            className={classes.modal}>
             <Fade in={compState.openNewFolder}>
-                <div className={classes.modal}>
-                    <Typography variant="h5">New folder</Typography>
-                    <TextField label="Folder name" className={classes.modalInput} onChange={updateFolderName}/>
-                    
-                    <Box className={classes.modalBox}>
-                        <Button variant="contained" color="secondary"
-                            onClick={() => dispatch({type: ACTIONS.CLOSE_NEW_FOLDER})}>
-                            cancel
-                        </Button>
-                        <Button variant="outlined" color="primary"
-                            onClick={newFolder}>
-                            create folder
-                        </Button>
-                    </Box>
-                </div>
+                <Paper elevation={6}>
+                    <Container maxWidth={"xs"} className={classes.modalContainer}>
+                        <Typography variant={"h6"} gutterBottom align={"center"}>Create a new folder</Typography>
+                        <TextField label={"New folder name"} className={classes.modalInput} onChange={(event) => updateFolderName(event)}/>
+                        <Box className={classes.modalBox}>
+                            <Button variant={"outlined"} color={"secondary"} onClick={() => dispatch({type: ACTIONS.CLOSE_NEW_FOLDER})}>
+                                Cancel
+                            </Button>
+                            <Button variant={"contained"} color={"primary"} onClick={newFolder}>
+                                Create
+                            </Button>
+                        </Box>
+                    </Container>
+                </Paper>
             </Fade>
         </Modal>
 

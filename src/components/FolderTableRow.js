@@ -1,19 +1,17 @@
-import { Box, Button, Fade, Hidden, IconButton, Menu, MenuItem, Modal, 
-        TableCell, TableRow, Typography, Snackbar } from '@material-ui/core';
-import {Alert} from '@material-ui/lab';
+import {
+    Box, Button, Container, Fade, Hidden, IconButton, Menu, MenuItem, Modal, Paper,
+    TableCell, TableRow, Typography
+} from '@material-ui/core';
 import { Folder, MoreHoriz } from '@material-ui/icons';
 import {useStyles} from '../styles/TableRowStyles';
 import React, {useReducer} from 'react';
-import {deleteFolder} from '../utils/contentUtil';
-import MySnackbar from './MySnackbar';
+import {deleteFolder, downloadFolder} from '../utils/contentUtil';
 
 const ACTIONS = {
     OPEN_MENU: "display_menu",
     CLOSE_MENU: "close_menu",
     OPEN_WARNING: "open_warning",
-    CLOSE_WARNING: "close_warning",
-    DELETE_FOLDER_SUCCESS: "delete_folder_success",
-    CLOSE_SNACK: "close_snack"
+    CLOSE_WARNING: "close_warning"
 }
 
 function reducer(state, action){
@@ -24,17 +22,11 @@ function reducer(state, action){
         case ACTIONS.CLOSE_MENU:
             return {...state, anchorEl: null, openMenu: false};
 
-        case ACTIONS.OPEN_WARNING:
-            return {...state, openWarning: true, openMenu: false};
+        case ACTIONS.DISPLAY_WARNING:
+            return {...state, displayWarning: true, openMenu: false};
 
         case ACTIONS.CLOSE_WARNING:
-            return {...state, openWarning: false};
-
-        case ACTIONS.CLOSE_SNACK:
-            return {...state, openSnack: false}
-
-        case ACTIONS.DELETE_FOLDER_SUCCESS:
-            return {...state, openSnack: true}
+            return {...state, displayWarning: false};
 
         default:
             return state;
@@ -43,10 +35,8 @@ function reducer(state, action){
 
 const initialState = {
     openMenu: false,
-    openWarning: false,
+    displayWarning: false,
     anchorEl: null,
-    openSnack: false,
-    snackContent: {content: "folder deleted", type: "success"}
 }
 
 const FileTableRow = ({MAIN_ACTIONS, folder, mainSectionDispatch}) => {
@@ -57,11 +47,30 @@ const FileTableRow = ({MAIN_ACTIONS, folder, mainSectionDispatch}) => {
         mainSectionDispatch({type: MAIN_ACTIONS.ADD_NEW_ROUTE, route: name})
     }
 
+    const download = () => {
+        downloadFolder(folder.id)
+            .then(response => {
+                dispatch({type: ACTIONS.CLOSE_MENU});
+                const url = window.URL.createObjectURL(
+                    new Blob([response.data], {type: response.headers.["content-type"]})
+                );
+
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", folder.folderName+".zip");
+                document.body.appendChild(link);
+                link.click();
+            })
+    }
+
     const deleteFolderById = () => {
         deleteFolder(folder.id)
             .then(_ => {
-                dispatch({type: ACTIONS.DELETE_FOLDER_SUCCESS});
-                mainSectionDispatch({type: MAIN_ACTIONS.REMOVE_FOLDER, folderId: folder.id});
+                mainSectionDispatch({type: MAIN_ACTIONS.REMOVE_FOLDER, folderId: folder.id, 
+                    folderName: folder.folderName});
+            })
+            .catch( _ => {
+                mainSectionDispatch({type: MAIN_ACTIONS.REMOVE_FOLDER_FAILURE, folderName: folder.folderName})
             })
     }
 
@@ -90,37 +99,32 @@ const FileTableRow = ({MAIN_ACTIONS, folder, mainSectionDispatch}) => {
             open={state.openMenu} anchorEl={state.anchorEl} 
             onClose={() => dispatch({type: ACTIONS.CLOSE_MENU})}
         >
-            <MenuItem onClick={() => dispatch({type: ACTIONS.CLOSE_WARNING})}>Download</MenuItem>
-            <MenuItem onClick={() => dispatch({type: ACTIONS.OPEN_WARNING})}>Delete</MenuItem>
+            <MenuItem onClick={download}>Download</MenuItem>
+            <MenuItem onClick={() => dispatch({type: ACTIONS.DISPLAY_WARNING})}>Delete</MenuItem>
         </Menu>
 
-        <Modal open={state.openWarning} onClose={() => dispatch({type: ACTIONS.CLOSE_MENU})} >
-            <Fade in={state.openWarning}>
-                <div className={classes.warning}>
-                    <Typography align="center">
-                        Deleting this folder will delete all it's subfolders and all files inside of them,
-                        are you sure you want to delete this folder?
-                    </Typography>
-                    <Box className={classes.warningBox}>
-                        <Button variant="contained" color="secondary"
-                        onClick={() => dispatch({type: ACTIONS.CLOSE_WARNING})}>
-                            Cancel
-                        </Button>
-
-                        <Button variant="outlined" color="primary"
-                        onClick={deleteFolderById}>
-                            Delete folder
-                        </Button>
-                    </Box>
-                </div>
-            </Fade>
-        </Modal>
-
-        <Snackbar open={state.openSnack} anchorOrigin={{vertical: "top", horizontal: "center"}}>
-            <Alert severity="success" onClose={() => dispatch({type: ACTIONS.CLOSE_SNACK})}>
-                Hello world
-            </Alert>
-        </Snackbar>
+            <Modal open={state.displayWarning} onClose={() => dispatch({type: ACTIONS.CLOSE_WARNING})}
+                   className={classes.warning}>
+                <Fade in={state.displayWarning}>
+                    <Paper elevation={6}>
+                        <Container maxWidth={"xs"} className={classes.warningContainer}>
+                            <Typography gutterBottom variant={"body1"} align={"center"}>
+                                Are you sure you want to delete this folder? Deleting this folder will delete
+                                all the files and folders contained in it.
+                            </Typography>
+                            <Box className={classes.warningBox}>
+                                <Button variant={"contained"} color={"secondary"}
+                                        onClick={() => dispatch({type: ACTIONS.CLOSE_WARNING})}>
+                                    Cancel
+                                </Button>
+                                <Button variant={"outlined"} color={"primary"} onClick={deleteFolderById}>
+                                    Delete
+                                </Button>
+                            </Box>
+                        </Container>
+                    </Paper>
+                </Fade>
+            </Modal>
 
         </>
     )

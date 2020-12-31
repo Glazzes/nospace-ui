@@ -1,13 +1,13 @@
 import { Snackbar } from '@material-ui/core';
-import { Alert } from '@material-ui/lab';
+import MuiAlert from '@material-ui/lab/Alert';
 import React from 'react'
 
 const MySnackbar = ({open, content, close, type}) => {
     return (
         <Snackbar open={open} anchorOrigin={{vertical: "top", horizontal: "center"}}>
-            <Alert severity={type} onClose={close}>
+            <MuiAlert elevation={5} variant={"filled"} severity={type} onClose={close}>
                 {content}
-            </Alert>
+            </MuiAlert>
         </Snackbar>
     )
 }

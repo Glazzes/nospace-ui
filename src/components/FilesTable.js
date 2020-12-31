@@ -29,7 +29,8 @@ const FilesTable = ({ACTIONS, mainSectionRoutes, mainSectionDispatch, files, fol
                     mainSectionDispatch={mainSectionDispatch} MAIN_ACTIONS={ACTIONS}
                     /> )}
 
-                    {files.map( file => <FileTableRow key={file.id} file={file} />)}
+                    {files.map( file => <FileTableRow key={file.id} file={file}
+                    mainSectionDispatch={mainSectionDispatch} MAIN_ACTIONS={ACTIONS}/>)}
                 </TableBody>
             </Table>
         </TableContainer>
