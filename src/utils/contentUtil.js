@@ -32,7 +32,7 @@ export const deleteFolder = (folderId) => {
 
 export const deleteFile = (fileId) => {
     const url = `${BASE_URL}files/${fileId}`;
-    return axios.delete(url, {crossdomain: true, withCredentials: true});
+    return axios.delete(url, {withCredentials: true});
 }
 
 export const downloadFile = (fileId) => {

@@ -1,5 +1,4 @@
-import { Button, Grid, Link, Snackbar, TextField, Typography } from '@material-ui/core';
-import { AccountCircle, Lock } from '@material-ui/icons';
+import {Button, Container, Divider, Link, Paper, Snackbar, TextField, Typography} from '@material-ui/core';
 import Alert from '@material-ui/lab/Alert';
 import React, { useState } from 'react';
 import {useStyles} from '../styles/LoginStyles';
@@ -17,6 +16,7 @@ const Login = ({history}) => {
         const fieldName = event.target.name;
         const currentValue = event.target.value;
         setUser({...user, [fieldName]: currentValue});
+        console.log(user);
     }
 
     const logMe = (event) => {
@@ -29,37 +29,22 @@ const Login = ({history}) => {
 
     return (
         <>
-        <div className={classes.bg}></div>
-        <form className={classes.form} onSubmit={logMe}>
-            <Typography variant="h4" color="secondary" align="center">Login</Typography>
-            <Grid container alignItems="flex-end"  className={classes.formInput}>
-                <Grid item>
-                    <AccountCircle />
-                </Grid>
-                <Grid item>
-                    <TextField label="username" className={classes.input} name="username" 
-                        onChange={updateUser}
-                    />
-                </Grid>
-            </Grid>
-            <Grid container alignItems="flex-end" className={classes.formInput}>
-                <Grid item>
-                    <Lock />
-                </Grid>
-                <Grid item>
-                    <TextField label="password" className={classes.input} name="password" 
-                         onChange={updateUser} type="password"
-                    />
-                </Grid>
-            </Grid>
-            
-            <Button variant="contained" color="secondary" className={classes.btn}
-            type="submit"
-            >Login
-            </Button>
-
-            <Link color="secondary" className={classes.link}>Need an account?</Link>
-            <Link color="secondary" className={classes.link}>Sign up</Link>
+            <div className={classes.bg} />
+        <form onSubmit={(event) => logMe(event)} className={classes.login}>
+            <Paper elevation={6}>
+                <Container maxWidth={"md"} className={classes.container}>
+                    <Typography variant={"h6"} color={"secondary"} align={"center"} gutterBottom>Log in!</Typography>
+                    <TextField label={"Username"} onChange={(event) =>  updateUser(event)}
+                    className={classes.input} name={"username"}/>
+                    <TextField label={"Password"} onChange={(event) =>  updateUser(event)}
+                    className={classes.input} type={"password"} name={"password"}/>
+                    <Button variant={"contained"} color={"secondary"} className={classes.btn} type={"submit"}>
+                        Log me in!
+                    </Button>
+                    <Divider/>
+                    <Link color={"secondary"}>Don't you have and account?</Link>
+                </Container>
+            </Paper>
         </form>
 
         <Snackbar open={open}  onClose={closeEror}

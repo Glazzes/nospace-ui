@@ -3,29 +3,38 @@ import {makeStyles} from '@material-ui/core';
 export const useStyles = makeStyles( theme => ({
     bg: {
         width: "100vw",
-        height: "40vh",
+        height: "50vh",
         backgroundImage: "linear-gradient(-45deg, #e94560, #0f3460)",
         [theme.breakpoints.up("md")]: {
             width: "50vw",
             height: "100vh",
         },
     },
-    form:{
-        width: "70vw",
-        margin: "auto",
-        position: "absolute",
-        top: "20vh",
-        left: "12vw",
-        backgroundColor: "white",
-        borderRadius: "5px",
+    login:{
+        margin: "20px",
+        borderRadius: "10px",
         padding: "10px",
-        boxShadow: "0 0 10px",
+        [theme.breakpoints.down("xs")]: {
+            position: "absolute",
+            top: "30%",
+        }
     },
-    formInput: {
-        marginTop: "10px",
+    signup:{
+        borderRadius: "10px",
+        padding: "10px",
+        margin: "20px",
+        [theme.breakpoints.down("xs")]: {
+            position: "absolute",
+            top: "50%",
+            transform: "translateY(-50%)"
+        }
+    },
+    container: {
+        padding: "10px"
     },
     input: {
-        width: "60vw"
+        marginTop: "20px",
+        width: "100%"
     },
     btn: {
         marginTop: "10px",

@@ -5,12 +5,7 @@ export const login = (user) => {
 }
 
 export const signUp = (user) => {
-    let options = {
-        withCredentials: true,
-        responseType: "application/json"
-    };
-
-    return axios.post(`http://localhost:8080/api/account/register`, user, options);
+    return axios.post(`http://localhost:8080/api/account/register`, user, {withCredentials: true});
 }
 
 export const getCurrentUser = () => {
