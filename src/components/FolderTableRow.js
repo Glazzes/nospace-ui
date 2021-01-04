@@ -1,17 +1,32 @@
 import {
-    Box, Button, Container, Fade, Hidden, IconButton, Menu, MenuItem, Modal, Paper,
-    TableCell, TableRow, Typography
+    Box,
+    Button,
+    Dialog, DialogActions,
+    DialogContent,
+    DialogContentText, DialogTitle,
+    Hidden,
+    IconButton,
+    Menu,
+    MenuItem,
+    TableCell,
+    TableRow,
+    Typography
 } from '@material-ui/core';
 import { Folder, MoreHoriz } from '@material-ui/icons';
 import {useStyles} from '../styles/TableRowStyles';
 import React, {useReducer} from 'react';
 import {deleteFolder, downloadFolder} from '../utils/contentUtil';
+import MySnackbar from "./MySnackbar";
 
 const ACTIONS = {
     OPEN_MENU: "display_menu",
     CLOSE_MENU: "close_menu",
     OPEN_WARNING: "open_warning",
-    CLOSE_WARNING: "close_warning"
+    CLOSE_WARNING: "close_warning",
+    CLOSE_SNACKBAR: "close_snackbar",
+    FOLDER_DELETE_SUCCESS: "folder_delete_success",
+    FOLDER_DELETE_FAILURE: "folder_delete_failure",
+    DISABLE_DELETE_BUTTON: "disable_delete_button"
 }
 
 function reducer(state, action){
@@ -28,6 +43,20 @@ function reducer(state, action){
         case ACTIONS.CLOSE_WARNING:
             return {...state, displayWarning: false};
 
+        case ACTIONS.CLOSE_SNACKBAR:
+            return {...state, snackbar: {...state.snackbar, isOpen: false}};
+
+        case ACTIONS.FOLDER_DELETE_SUCCESS:
+            return {...state, snackbar: {content: `${action.folderName} was deleted successfully`,
+                    type: "error", isOpen: true}};
+
+        case ACTIONS.FOLDER_DELETE_FAILURE:
+            return {...state, snackbar: {content: `${action.folderName} couldn\t be deleted`, type: "error",
+                isOpen: true}};
+
+        case ACTIONS.DISABLE_DELETE_BUTTON:
+            return {...state, isDeleteFileButtonDisabled: true};
+
         default:
             return state;
     }
@@ -37,6 +66,8 @@ const initialState = {
     openMenu: false,
     displayWarning: false,
     anchorEl: null,
+    snackbar: {content: "", type: "", isOpen: false},
+    isDeleteFileButtonDisabled: false
 }
 
 const FileTableRow = ({MAIN_ACTIONS, folder, mainSectionDispatch}) => {
@@ -64,12 +95,15 @@ const FileTableRow = ({MAIN_ACTIONS, folder, mainSectionDispatch}) => {
     }
 
     const deleteFolderById = () => {
+        dispatch({type: ACTIONS.DISABLE_DELETE_BUTTON});
         deleteFolder(folder.id)
             .then(_ => {
+                dispatch({type: ACTIONS.FOLDER_DELETE_SUCCESS, folderName: folder.folderName})
                 mainSectionDispatch({type: MAIN_ACTIONS.REMOVE_FOLDER, folderId: folder.id, 
                     folderName: folder.folderName});
             })
             .catch( _ => {
+                dispatch({type: ACTIONS.FOLDER_DELETE_FAILURE, folderName: folder.folderName});
                 mainSectionDispatch({type: MAIN_ACTIONS.REMOVE_FOLDER_FAILURE, folderName: folder.folderName})
             })
     }
@@ -103,29 +137,27 @@ const FileTableRow = ({MAIN_ACTIONS, folder, mainSectionDispatch}) => {
             <MenuItem onClick={() => dispatch({type: ACTIONS.DISPLAY_WARNING})}>Delete</MenuItem>
         </Menu>
 
-            <Modal open={state.displayWarning} onClose={() => dispatch({type: ACTIONS.CLOSE_WARNING})}
-                   className={classes.warning}>
-                <Fade in={state.displayWarning}>
-                    <Paper elevation={6}>
-                        <Container maxWidth={"xs"} className={classes.warningContainer}>
-                            <Typography gutterBottom variant={"body1"} align={"center"}>
-                                Are you sure you want to delete this folder? Deleting this folder will delete
-                                all the files and folders contained in it.
-                            </Typography>
-                            <Box className={classes.warningBox}>
-                                <Button variant={"contained"} color={"secondary"}
-                                        onClick={() => dispatch({type: ACTIONS.CLOSE_WARNING})}>
-                                    Cancel
-                                </Button>
-                                <Button variant={"outlined"} color={"primary"} onClick={deleteFolderById}>
-                                    Delete
-                                </Button>
-                            </Box>
-                        </Container>
-                    </Paper>
-                </Fade>
-            </Modal>
+        <Dialog open={state.displayWarning}>
+            <DialogTitle>Delete folder {folder.folderName}</DialogTitle>
+            <DialogContent>
+                <DialogContentText>
+                    Deleting this folder will delete all the files and folders that are inside of it, are you
+                    sure you want to delete this folder?
+                </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+                <Button variant={"contained"} color={"secondary"} onClick={() => dispatch({type: ACTIONS.CLOSE_WARNING})}>
+                    Cancel
+                </Button>
+                <Button variant={"outlined"} color={"primary"} onClick={deleteFolderById}
+                disabled={state.isDeleteFileButtonDisabled}>
+                    Delete folder
+                </Button>
+            </DialogActions>
+        </Dialog>
 
+            <MySnackbar open={state.snackbar.isOpen} content={state.snackbar.content} type={state.snackbar.type}
+             close={() => dispatch({type: ACTIONS.CLOSE_SNACKBAR})} />
         </>
     )
 }

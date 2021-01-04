@@ -1,13 +1,10 @@
 import {
     Box,
-    Button, Container,
-    Fade,
+    Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
     Hidden,
     IconButton,
     Menu,
     MenuItem,
-    Modal,
-    Paper,
     TableCell,
     TableRow,
     Typography
@@ -16,11 +13,16 @@ import { FileCopy, MoreHoriz } from '@material-ui/icons'
 import {useStyles} from '../styles/TableRowStyles';
 import React, {useReducer} from 'react'
 import {deleteFile, downloadFile} from '../utils/contentUtil';
+import MySnackbar from "./MySnackbar";
 
 const ACTIONS = {
     OPEN_MENU: "open_menu",
     CLOSE_MENU: "close_menu",
+    CLOSE_SNACKBAR: "close_snackbar",
     DISPLAY_WARNING: "display_warning",
+    FILE_DELETED_SUCCESS: "file_deleted_success",
+    FILE_DELETED_FAILURE: "file_deleted_failure",
+    DISABLE_DELETE_BUTTON: "disable_delete_button"
 }
 
 function reducer(state, action){
@@ -37,6 +39,20 @@ function reducer(state, action){
         case ACTIONS.CLOSE_MENU:
             return {...state, openMenu: false}
 
+        case ACTIONS.FILE_DELETED_SUCCESS:
+            return {...state, openSnackBar: true,
+                snackbar: {content: `${action.filename} was deleted successfully`, type: "success"}};
+
+        case ACTIONS.FILE_DELETED_FAILURE:
+            return {...state, snackbar: {content: `${action.filename} couldn\'t get deleted`, type: "error"},
+            openSnackBar: true};
+
+        case ACTIONS.CLOSE_SNACKBAR:
+            return {...state, snackbar: {content: "", type: ""}, openSnackBar: false};
+
+        case ACTIONS.DISABLE_DELETE_BUTTON:
+            return {...state, isDeleteFileButtonDisabled: true};
+
         default:
             return state;
     }
@@ -47,6 +63,9 @@ const initialState = {
     anchorEl: null,
     displayWarning: false,
     modal: {content: "", action: ""},
+    openSnackBar: false,
+    snackbar: {content: "", type: ""},
+    isDeleteFileButtonDisabled: false
 }
 
 const FileTableRow = ({MAIN_ACTIONS, file, mainSectionDispatch}) => {
@@ -54,11 +73,14 @@ const FileTableRow = ({MAIN_ACTIONS, file, mainSectionDispatch}) => {
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const deleteFileById = () => {
+        dispatch({type: ACTIONS.DISABLE_DELETE_BUTTON});
         deleteFile(file.id)
             .then(_ => {
+                dispatch({type: ACTIONS.FILE_DELETED_SUCCESS, filename: file.filename});
                 mainSectionDispatch({type: MAIN_ACTIONS.REMOVE_FILE, fileId: file.id, filename: file.filename})
             })
             .catch(_ => {
+                dispatch({type: ACTIONS.FILE_DELETED_FAILURE, filename: file.filename});
                 mainSectionDispatch({type: MAIN_ACTIONS.REMOVE_FILE_FAILURE, filename: file.filename})
             })
     }
@@ -109,27 +131,27 @@ const FileTableRow = ({MAIN_ACTIONS, file, mainSectionDispatch}) => {
             <MenuItem onClick={() => dispatch({type: ACTIONS.DISPLAY_WARNING})}>Delete</MenuItem>
         </Menu>
 
-        <Modal open={state.displayWarning} onClose={() => dispatch({type: ACTIONS.CLOSE_WARNING})}
-        className={classes.warning}>
-            <Fade in={state.displayWarning}>
-                <Paper elevation={6}>
-                    <Container maxWidth={"xs"} className={classes.warningContainer}>
-                        <Typography gutterBottom variant={"body1"} align={"center"}>
-                            Are you sure you want to delete this file?
-                        </Typography>
-                        <Box className={classes.warningBox}>
-                            <Button variant={"contained"} color={"secondary"}
-                            onClick={() => dispatch({type: ACTIONS.CLOSE_WARNING})}>
-                                Cancel
-                            </Button>
-                            <Button variant={"outlined"} color={"primary"} onClick={deleteFileById}>
-                                Delete
-                            </Button>
-                        </Box>
-                    </Container>
-                </Paper>
-            </Fade>
-        </Modal>
+         <Dialog open={state.displayWarning}>
+             <DialogTitle>Delete file {file.filename}</DialogTitle>
+             <DialogContent>
+                 <DialogContentText>
+                     Are you sure you want to delete this file?
+                 </DialogContentText>
+             </DialogContent>
+             <DialogActions>
+                 <Button variant={"contained"} color={"secondary"}
+                         onClick={() => dispatch({type: ACTIONS.CLOSE_WARNING})}>
+                     Cancel
+                 </Button>
+                 <Button variant={"outlined"} color={"primary"} onClick={deleteFileById}
+                 disabled={state.isDeleteFileButtonDisabled}>
+                     Delete file
+                 </Button>
+             </DialogActions>
+         </Dialog>
+
+        <MySnackbar open={state.openSnackBar} type={state.snackbar.type} content={state.snackbar.content}
+         close={() => dispatch({type: ACTIONS.CLOSE_SNACKBAR})} />
         </>
     )
 }

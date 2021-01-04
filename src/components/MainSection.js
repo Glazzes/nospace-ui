@@ -2,31 +2,28 @@ import {
     Box,
     Breadcrumbs,
     Button,
-    Container,
-    Fade,
+    Dialog, DialogActions, DialogContent, DialogTitle,
     Menu,
     MenuItem,
-    Modal,
-    Paper,
     TextField,
     Typography
 } from '@material-ui/core'
 import { ExpandMore, NavigateNext } from '@material-ui/icons';
-import React, { useContext, useEffect, useReducer } from 'react';
+import React, {useContext, useEffect, useReducer, useRef} from 'react';
 import {useStyles} from '../styles/MainSectionStyles';
 import { getCurrentUser } from '../utils/authenticationUtil';
 import FilesTable from './FilesTable';
 import { GlobalContext } from './GlobalState';
 import { createNewFolder, getCurrentContent, fileUpload } from '../utils/contentUtil';
 import MySnackbar from './MySnackbar';
+import {Formik, Form, useField} from 'formik';
+import * as yup from 'yup';
 
 const ACTIONS = {
     NEW_FOLDER: "new_folder",
     SET_FILES: "set_files",
     SET_FOLDERS: "set_folders",
     SET_ROOT_ID: "set_root_id",
-    FILTER_FILES: "filter_files",
-    FILTER_FOLDERS: "filter_folders",
     OPEN_NEW_FOLDER: "open_new_folder",
     CLOSE_NEW_FOLDER: "close_new_folder",
     OPEN_MENU: "open_menu",
@@ -36,7 +33,6 @@ const ACTIONS = {
     GO_TO_ROUTE: "go_to_route",
     GO_BACK: "go_back",
     ADD_NEW_ROUTE: "add_new_route",
-    UPDATE_NEW_FOLDERNAME: "update_new_folder_name",
     UPLOADED_FILES: "uploaded_files",
     FALIED_UPLOAD: "failed_upload",
     FAILED_CONTENT_REQUEST: "failed_content_request",
@@ -71,23 +67,10 @@ function reducer(state, action){
             return {...state, rootId: action.id};
 
         case ACTIONS.SET_FOLDERS:
-            return {...state, folders: action.folders, renderFolders: action.folders};
+            return {...state, folders: action.folders};
     
         case ACTIONS.SET_FILES:
-            return {...state, files: action.files, renderFiles: action.files};
-
-        case ACTIONS.FILTER_FILES:
-            const filteredFiles = state.files
-                .filter( file => file.filename.toLocaleLowerCase().includes(action.value.toLocaleLowerCase()))
-            return {...state, renderFiles: filteredFiles};
-
-        case ACTIONS.FILTER_FOLDERS:
-            const filteredFolders = state.folders
-                .filter( folder => folder.folderName.toLocaleLowerCase().includes(action.value.toLocaleLowerCase()))
-            return {...state, renderFolders: filteredFolders};
-
-        case ACTIONS.UPDATE_NEW_FOLDERNAME:
-            return {...state, newFolderName: action.event.target.value}
+            return {...state, files: action.files};
 
         case ACTIONS.UPLOADED_FILES:
             return {...state, snackContent: {...state.snackContent, content: "Files uploaded successfuly", type: "success"},
@@ -110,9 +93,9 @@ function reducer(state, action){
 
         case ACTIONS.NEW_FOLDER:
             return {...state,
-                    folders: [...state.folders, action.newFolder], 
-                    renderFolders: [...state.renderFolders, action.newFolder],
-                    snackContent: {...state.snackContent, content: "Folder created succesfully", type: "success"},
+                    folders: [...state.folders, action.newFolder],
+                    snackContent:
+                        {...state.snackContent, content: `${action.folderName} folder was created successfully`, type: "success"},
                     openNewFolder: false, openSnack: true
                 }
 
@@ -153,8 +136,6 @@ const initialState = {
     anchorEl: null,
     files: [],
     folders: [],
-    renderFiles: [],
-    renderFolders: [],
     openNewFolder: false,
     openMenu: false,
     openSnack: false,
@@ -164,17 +145,21 @@ const initialState = {
     rootId: ""
 }
 
+const CustomTextField = ({label, ...props}) => {
+    const classes = useStyles();
+    const [field, meta] = useField(props);
+    const errorText = meta.error && meta.touched ? meta.error : "";
+    return <TextField {...field} label={label} helperText={errorText} variant={"outlined"} className={classes.newFolderInput}/>
+}
+
 const SearchBar = () => {
     const classes = useStyles();
     const [state, setState] = useContext(GlobalContext);
     const [compState, dispatch] = useReducer(reducer, initialState);
+    const inputRef = useRef();
 
     const goToRoute = (index) => {
         dispatch({type: ACTIONS.GO_TO_ROUTE, index: index});
-    }
-
-    const updateFolderName = (event) => {
-        dispatch({type: ACTIONS.UPDATE_NEW_FOLDERNAME, event: event});
     }
 
     const filterFilesAndFolders = (event) => {
@@ -195,14 +180,6 @@ const SearchBar = () => {
             .catch(_ => dispatch({type: ACTIONS.FALIED_UPLOAD}));
     }
 
-    const newFolder = () => {
-        createNewFolder(compState.rootId, compState.newFolderName)
-            .then(response => {
-                dispatch({type: ACTIONS.NEW_FOLDER, newFolder: response.data});
-            })
-            .catch(_ => dispatch({type: ACTIONS.FAILED_FOLDER_CREATION}))
-    }
-
     useEffect( () => {
         getCurrentUser()
             .then( response => setState({...state, currentUser: response.data}) )
@@ -218,6 +195,10 @@ const SearchBar = () => {
             })
             .catch(_ => dispatch({type: ACTIONS.FAILED_CONTENT_REQUEST}));
     }, [compState.routes] )
+
+    const validationScheme = yup.object({
+        folderName: yup.string().required()
+    })
 
     return (
         <>
@@ -239,7 +220,7 @@ const SearchBar = () => {
                 <MenuItem onClick={() => dispatch({type: ACTIONS.OPEN_NEW_FOLDER})}>New folder</MenuItem>
             </Menu>
 
-            <TextField className={classes.searchInput} variant="outlined"
+            <TextField className={classes.searchInput} variant="outlined" ref={inputRef}
                 label="Search your files and folders" onChange={filterFilesAndFolders}
             />
         </Box>
@@ -253,28 +234,53 @@ const SearchBar = () => {
         <FilesTable 
             ACTIONS={ACTIONS}
             mainSectionRoutes={compState.routes} mainSectionDispatch={dispatch}
-            files={compState.renderFiles} folders={compState.renderFolders}/>
+            files={compState.files} folders={compState.folders}
+        />
 
-        <Modal open={compState.openNewFolder}
-            onClose={() => dispatch({type: ACTIONS.CLOSE_NEW_FOLDER})}
-            className={classes.modal}>
-            <Fade in={compState.openNewFolder}>
-                <Paper elevation={6}>
-                    <Container maxWidth={"xs"} className={classes.modalContainer}>
-                        <Typography variant={"h6"} gutterBottom align={"center"}>Create a new folder</Typography>
-                        <TextField label={"New folder name"} className={classes.modalInput} onChange={(event) => updateFolderName(event)}/>
-                        <Box className={classes.modalBox}>
-                            <Button variant={"outlined"} color={"secondary"} onClick={() => dispatch({type: ACTIONS.CLOSE_NEW_FOLDER})}>
+        <Dialog open={compState.openNewFolder}>
+            <DialogTitle>Create a new folder</DialogTitle>
+            <Formik initialValues={{folderName: ""}} onSubmit={(values, {setSubmitting}) => {
+                setSubmitting(true);
+                createNewFolder(compState.rootId, values.folderName)
+                    .then(response => {
+                        dispatch({type: ACTIONS.NEW_FOLDER, newFolder: response.data,
+                        folderName: response.data.folderName});
+                    })
+                    .catch(_ => {
+                        dispatch({type: ACTIONS.FAILED_FOLDER_CREATION});
+                        setSubmitting(false);
+                    })
+            }}
+            validationSchema={validationScheme} validate={(values) => {
+                const errors = {};
+                for(let folder of compState.folders){
+                    if(folder.folderName === values.folderName){
+                        errors.folderName = `There's already a folder called ${values.folderName} on the`+
+                            " current folder, try with a new name"
+                    }
+                }
+
+                return errors;
+            }}>
+                {({values, isSubmitting}) => (
+                    <Form>
+                        <DialogContent>
+                            <CustomTextField label={"Folder name"} name={"folderName"} values={values.folderName}/>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button variant={"contained"} color={"secondary"}
+                                    onClick={() => dispatch({type: ACTIONS.CLOSE_NEW_FOLDER})}>
                                 Cancel
                             </Button>
-                            <Button variant={"contained"} color={"primary"} onClick={newFolder}>
-                                Create
+                            <Button variant={"contained"} color={"primary"} type={"submit"}
+                                    disabled={isSubmitting}>
+                                Create folder
                             </Button>
-                        </Box>
-                    </Container>
-                </Paper>
-            </Fade>
-        </Modal>
+                        </DialogActions>
+                    </Form>
+                )}
+            </Formik>
+        </Dialog>
 
         <MySnackbar open={compState.openSnack} content={compState.snackContent.content} 
             type={compState.snackContent.type}

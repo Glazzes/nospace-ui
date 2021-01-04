@@ -1,4 +1,4 @@
-import {Button, Container, Divider, Link, Paper, TextField, Typography} from '@material-ui/core';
+import {Button, Container, Paper, TextField, Typography} from '@material-ui/core';
 import React, { useReducer } from 'react';
 import {useStyles} from '../styles/LoginStyles';
 import {signUp} from '../utils/authenticationUtil';
@@ -14,21 +14,13 @@ const CustomTextField = ({label, type, ...props}) => {
 }
 
 const ACTIONS = {
-    UPDATE_USER: "update_user",
-    RESET_USER: "reset_user",
     OPEN_BANNER_ON_FAILURE: "open_banner_on_failure",
     OPEN_BANNER_ON_SUCCESS: "open_banner_on_success",
     CLOSE_BANNER: "close_banner",
-    SET_ERRORS: "errors"
 }
 
 function reducer(state, action){
     switch(action.type){
-        case ACTIONS.UPDATE_USER:
-            const value = action.event.target.value;
-            const name = action.event.target.name;
-            return {...state, user: {...state.user, [name]: value}}
-
         case ACTIONS.OPEN_BANNER_ON_FAILURE:
             return {...state, snackContent: {
                 ...state.content, severity: "error", content: "Invalid data, try again"
@@ -37,16 +29,10 @@ function reducer(state, action){
         case ACTIONS.OPEN_BANNER_ON_SUCCESS:
             return {...state, snackContent: {
                 ...state.content, severity: "success", content: "Account created succesfuly, check your email!"
-            }, openSnack: true, errors: []}
+            }, openSnack: true}
 
         case ACTIONS.CLOSE_BANNER:
-            return {...state, openSnack: false, errors: []}
-        
-        case ACTIONS.RESET_USER:
-            return {...state, user: {username: "", password: "", email: ""}}
-
-        case ACTIONS.SET_ERRORS:
-            return {...state, errors: action.errors}
+            return {...state, openSnack: false}
 
         default:
             return state;
@@ -54,20 +40,13 @@ function reducer(state, action){
 }
 
 const initialState = {
-    user: {username: "", password: "", email: ""},
     openSnack: false,
-    snackContent: {severity: "", content: ""},
-    errors: []
+    snackContent: {severity: "", content: ""}
 }
 
 const SignUp = () => {
     const classes = useStyles();
     const [state, dispatch] = useReducer(reducer, initialState);
-
-    const displayErrors = (field) => {
-        return state.errors.filter( error => error.field === field )
-        .map( (error, index) => <span className={classes.error} key={index}>{error.defaultMessage}</span> )
-    }
 
     const formValidation = yup.object({
         username: yup.string().required().min(5).max(10),
@@ -81,14 +60,19 @@ const SignUp = () => {
         <div className={classes.bg} />
 
         <Formik initialValues={{username: "", email: "", password: "", retype: ""}}
-        validationSchema={formValidation} onSubmit={(values, {setSubmitting, resetForm}) => {
+        validationSchema={formValidation} onSubmit={(values, {setSubmitting, resetForm, setFieldError}) => {
             setSubmitting(true);
-            setTimeout(() => {
-                console.log("Submmited values")
-                setSubmitting(false);
-                resetForm();
-                dispatch({type: ACTIONS.OPEN_BANNER_ON_SUCCESS});
-            }, 2000);
+            const user = {username: values.username, password: values.password, email: values.email};
+            signUp(user)
+                .then(_ => {
+                    setSubmitting(false);
+                    dispatch({type: ACTIONS.OPEN_BANNER_ON_SUCCESS});
+                    resetForm();
+                })
+                .catch(errors => {
+                    setSubmitting(false);
+                    dispatch({type: ACTIONS.OPEN_BANNER_ON_FAILURE});
+                })
         }} validate={(values) => {
             const errors = {};
             if(values.password !== values.retype) errors.retype = "Password do no match"
@@ -96,7 +80,7 @@ const SignUp = () => {
             return errors;
         }}>
             {({values, isSubmitting}) => (
-                <Form className={classes.signup}>
+                <Form className={classes.form}>
                     <Paper elevation={6} >
                         <Container maxWidth={"md"} className={classes.container}>
                             <Typography variant={"h5"} gutterBottom color={"secondary"} align={"center"}>

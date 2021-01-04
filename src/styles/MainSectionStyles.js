@@ -50,5 +50,8 @@ export const useStyles = makeStyles(theme => ({
     },
     modalContainer: {
         padding:"10px"
+    },
+    newFolderInput: {
+        width: "100%"
     }
 }))
