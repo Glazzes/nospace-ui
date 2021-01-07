@@ -29,13 +29,6 @@ export const useStyles = makeStyles(theme => ({
         backgroundSize: "cover",
         backgroundPosition: "left"
     },
-    breadCrumb: {
-        cursor: "pointer",
-        "&:hover": {color: blue[900]},
-        [theme.breakpoints.down("md")]: {
-           marginLeft: "2.5vw"
-        }
-    },
     modal: {
         margin: "45px",
         padding: "10px"

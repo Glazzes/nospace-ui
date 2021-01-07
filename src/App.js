@@ -1,12 +1,12 @@
 import './logo.svg'
 import MainMenu from "./components/MainMenu";
 import { BrowserRouter, Route } from 'react-router-dom';
-import SearchBar from './components/MainSection';
 import Test from './components/Test';
 import Login from "./components/Login";
 import SignUp from './components/SignUp';
 import Settings from './components/Settings';
 import GlobalState from './components/GlobalState';
+import MainSection from "./components/MainSection";
 
 function App() {
   return (
@@ -14,7 +14,7 @@ function App() {
           <GlobalState >
             <Route exact path="/">
               <MainMenu/>
-              <SearchBar/>
+              <MainSection/>
             </Route>
 
             <Route path="/me/edit">

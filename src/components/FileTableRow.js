@@ -12,16 +12,13 @@ import {
 import { FileCopy, MoreHoriz } from '@material-ui/icons'
 import {useStyles} from '../styles/TableRowStyles';
 import React, {useReducer} from 'react'
-import {deleteFile, downloadFile} from '../utils/contentUtil';
-import MySnackbar from "./MySnackbar";
+import {deleteFile, downloadFile, convertBytesToReadableSize} from '../utils/contentUtil';
 
 const ACTIONS = {
     OPEN_MENU: "open_menu",
     CLOSE_MENU: "close_menu",
     CLOSE_SNACKBAR: "close_snackbar",
     DISPLAY_WARNING: "display_warning",
-    FILE_DELETED_SUCCESS: "file_deleted_success",
-    FILE_DELETED_FAILURE: "file_deleted_failure",
     DISABLE_DELETE_BUTTON: "disable_delete_button"
 }
 
@@ -39,17 +36,6 @@ function reducer(state, action){
         case ACTIONS.CLOSE_MENU:
             return {...state, openMenu: false}
 
-        case ACTIONS.FILE_DELETED_SUCCESS:
-            return {...state, openSnackBar: true,
-                snackbar: {content: `${action.filename} was deleted successfully`, type: "success"}};
-
-        case ACTIONS.FILE_DELETED_FAILURE:
-            return {...state, snackbar: {content: `${action.filename} couldn\'t get deleted`, type: "error"},
-            openSnackBar: true};
-
-        case ACTIONS.CLOSE_SNACKBAR:
-            return {...state, snackbar: {content: "", type: ""}, openSnackBar: false};
-
         case ACTIONS.DISABLE_DELETE_BUTTON:
             return {...state, isDeleteFileButtonDisabled: true};
 
@@ -62,27 +48,18 @@ const initialState = {
     openMenu: false,
     anchorEl: null,
     displayWarning: false,
-    modal: {content: "", action: ""},
-    openSnackBar: false,
-    snackbar: {content: "", type: ""},
     isDeleteFileButtonDisabled: false
 }
 
-const FileTableRow = ({MAIN_ACTIONS, file, mainSectionDispatch}) => {
+const FileTableRow = ({file, mainActions, mainDispatcher}) => {
     const classes = useStyles();
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const deleteFileById = () => {
         dispatch({type: ACTIONS.DISABLE_DELETE_BUTTON});
         deleteFile(file.id)
-            .then(_ => {
-                dispatch({type: ACTIONS.FILE_DELETED_SUCCESS, filename: file.filename});
-                mainSectionDispatch({type: MAIN_ACTIONS.REMOVE_FILE, fileId: file.id, filename: file.filename})
-            })
-            .catch(_ => {
-                dispatch({type: ACTIONS.FILE_DELETED_FAILURE, filename: file.filename});
-                mainSectionDispatch({type: MAIN_ACTIONS.REMOVE_FILE_FAILURE, filename: file.filename})
-            })
+            .then(_ => mainDispatcher({type: mainActions.REMOVE_FILE_BY_ID, id: file.id, filename: file.filename}))
+            .catch(_ => mainDispatcher({type: mainActions.REMOVE_FILE_BY_ID_FAILURE, filename: file.filename}));
     }
 
     const download = () => {
@@ -112,8 +89,8 @@ const FileTableRow = ({MAIN_ACTIONS, file, mainSectionDispatch}) => {
                 </Box>
             </TableCell>
             <Hidden mdDown>
-                <TableCell>{file.size}</TableCell>
-                <TableCell>{file.uploaded}</TableCell>
+                <TableCell>{convertBytesToReadableSize(file.fileSize)}</TableCell>
+                <TableCell>{file.uploadedAt}</TableCell>
             </Hidden>
             <TableCell>
                 <IconButton aria-controls="options" 
@@ -149,9 +126,6 @@ const FileTableRow = ({MAIN_ACTIONS, file, mainSectionDispatch}) => {
                  </Button>
              </DialogActions>
          </Dialog>
-
-        <MySnackbar open={state.openSnackBar} type={state.snackbar.type} content={state.snackbar.content}
-         close={() => dispatch({type: ACTIONS.CLOSE_SNACKBAR})} />
         </>
     )
 }

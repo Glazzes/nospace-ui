@@ -5,11 +5,10 @@ export const useStyles = makeStyles(theme => ({
     appBar: {backgroundColor: blue[900]},
     avatar: {width: "100px", height: "100px"},
     progress: {
-        width: "230px",
-        marginLeft: "10px",
-        [theme.breakpoints.up("md")]: {width: "300px"}
+        width: "80%",
+        margin: "0 10% 0 10%"
     },
-    progresText: {margin: "0 0 0 30px"},
+    progresText: {textAlign: "center"},
     space: {
         marginTop: "20px",
         width: "250px",

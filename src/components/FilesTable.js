@@ -1,12 +1,16 @@
-import React from 'react'
+import React, {useEffect} from 'react'
 import {useStyles} from '../styles/FilesTableStyles';
 import {Hidden, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography} from '@material-ui/core';
 import FileTableRow from './FileTableRow';
 import FolderTableRow from './FolderTableRow';
 import GoBackCell from './GoBackCell';
 
-const FilesTable = ({ACTIONS, mainSectionRoutes, mainSectionDispatch, files, folders}) => {
+const FilesTable = ({mainActions, mainRoutes, mainDispatcher, files, folders}) => {
     const classes = useStyles();
+
+    useEffect(() => {
+        console.log("Files table just re-rendered")
+    })
 
     return (
         <TableContainer className={classes.container}>
@@ -22,15 +26,16 @@ const FilesTable = ({ACTIONS, mainSectionRoutes, mainSectionDispatch, files, fol
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {mainSectionRoutes.length > 1 && 
-                        <GoBackCell  ACTIONS={ACTIONS} mainSectionDispatch={mainSectionDispatch} />
+                    {mainRoutes.length > 1 &&
+                        <GoBackCell  mainActions={mainActions} mainDispatcher={mainDispatcher} />
                     }
-                    {folders.map( folder => <FolderTableRow key={folder.id} folder={folder} 
-                    mainSectionDispatch={mainSectionDispatch} MAIN_ACTIONS={ACTIONS}
+
+                    {folders.map( folder => <FolderTableRow key={folder.id} folder={folder}
+                    mainDispatcher={mainDispatcher} mainActions={mainActions}
                     /> )}
 
                     {files.map( file => <FileTableRow key={file.id} file={file}
-                    mainSectionDispatch={mainSectionDispatch} MAIN_ACTIONS={ACTIONS}/>)}
+                    mainDispatcher={mainDispatcher} mainActions={mainActions}/>)}
                 </TableBody>
             </Table>
         </TableContainer>

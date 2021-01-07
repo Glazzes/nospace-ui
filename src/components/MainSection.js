@@ -1,23 +1,20 @@
 import {
     Box,
-    Breadcrumbs,
     Button,
-    Dialog, DialogActions, DialogContent, DialogTitle,
     Menu,
     MenuItem,
     TextField,
-    Typography
 } from '@material-ui/core'
-import { ExpandMore, NavigateNext } from '@material-ui/icons';
-import React, {useContext, useEffect, useReducer, useRef} from 'react';
+import { ExpandMore } from '@material-ui/icons';
+import React, {useContext, useEffect, useReducer, useState} from 'react';
 import {useStyles} from '../styles/MainSectionStyles';
 import { getCurrentUser } from '../utils/authenticationUtil';
 import FilesTable from './FilesTable';
 import { GlobalContext } from './GlobalState';
-import { createNewFolder, getCurrentContent, fileUpload } from '../utils/contentUtil';
+import { getCurrentContent, fileUpload } from '../utils/contentUtil';
 import MySnackbar from './MySnackbar';
-import {Formik, Form, useField} from 'formik';
-import * as yup from 'yup';
+import MyBreadcrumbs from './MyBreadcrumbs';
+import NewFolderDialog from "./NewFolderDialog";
 
 const ACTIONS = {
     NEW_FOLDER: "new_folder",
@@ -38,7 +35,11 @@ const ACTIONS = {
     FAILED_CONTENT_REQUEST: "failed_content_request",
     FAILED_FOLDER_CREATION: "failed_folder_creation",
     REMOVE_FOLDER: "remove_folder",
-    REMOVE_FILE: "remove_file"
+    REMOVE_FILE_BY_ID: "remove_file_by_id",
+    REMOVE_FILE_BY_ID_FAILURE: "remove_file_by_id_failure",
+    DELETE_FOLDER: "delete_folder",
+    DELETE_FOLDER_FAILURE: "delete_folder_failure",
+    FILTER_CONTENT: "filter_content"
 }
 
 function reducer(state, action){
@@ -105,27 +106,23 @@ function reducer(state, action){
                 openSnack: true
             }
 
-        case ACTIONS.REMOVE_FOLDER:
-            const updatedFolders = state.folders.filter(folder => folder.id !== action.folderId);
-            return {...state, folders: updatedFolders, renderFolders: updatedFolders,
-            snackContent: {content: `${action.folderName} folder was successfuly deleted`, type: "success"},
-            openSnack: true};
+        case ACTIONS.REMOVE_FILE_BY_ID:
+            const newFiles = state.files.filter(file => file.id !== action.id);
+            return {...state, files: newFiles, snackContent:
+                    {content: `${action.filename} was deleted successfully`, type: "success"}, openSnack: true};
 
-        case ACTIONS.REMOVE_FOLDER_FAILURE:
-            return {...state, snackContent: 
-                {content: `${action.folderName} could no be deleted, try later.`, type: "error"},
-                openSnack: true}
+        case ACTIONS.REMOVE_FILE_BY_ID_FAILURE:
+            return {...state, snackContent:
+                    {content: `${action.filename} could not be deleted, try again later`, type: "error"}, openSnack: true};
 
-        case ACTIONS.REMOVE_FILE:
-            const updatedFiles = state.files.filter(file => file.id !== action.fileId);
-            return {...state, files: updatedFiles, renderFiles: updatedFiles,
-            snackContent: {content: `${action.filename} was deleted successfuly`, type: "success"},
-            openSnack: true};
+        case ACTIONS.DELETE_FOLDER:
+            const newFolders = state.folders.filter(folder => folder.id !== action.id);
+            return {...state, folders: newFolders, snackContent: {
+                    content: `${action.folderName} was deleted successfully`, type: "success"}, openSnack: true};
 
-        case ACTIONS.REMOVE_FILE_FAILURE:
-            return {...state, snackContent: 
-                {content: `${action.folderName} couldn't be deleted, try later.`, type: "error"},
-                openSnack: true}
+        case ACTIONS.DELETE_FOLDER_FAILURE:
+            return {...state, snackContent:
+                    {content: `${action.folderName} could not be deleted, try again later`, type: "error"}, openSnack: true}
 
         default:
             return state;
@@ -145,27 +142,29 @@ const initialState = {
     rootId: ""
 }
 
-const CustomTextField = ({label, ...props}) => {
-    const classes = useStyles();
-    const [field, meta] = useField(props);
-    const errorText = meta.error && meta.touched ? meta.error : "";
-    return <TextField {...field} label={label} helperText={errorText} variant={"outlined"} className={classes.newFolderInput}/>
-}
-
-const SearchBar = () => {
+const MainSection = () => {
     const classes = useStyles();
     const [state, setState] = useContext(GlobalContext);
     const [compState, dispatch] = useReducer(reducer, initialState);
-    const inputRef = useRef();
+    const [serchItem, setSearchItem] = useState("");
 
     const goToRoute = (index) => {
         dispatch({type: ACTIONS.GO_TO_ROUTE, index: index});
     }
 
-    const filterFilesAndFolders = (event) => {
-        const value = event.target.value;
-        dispatch({type: ACTIONS.FILTER_FILES, value: value});
-        dispatch({type: ACTIONS.FILTER_FOLDERS, value: value});
+    const newFolder = (action) => {
+        switch (action.type){
+            case 'success':
+                dispatch({type: ACTIONS.NEW_FOLDER, newFolder: action.data,
+                    folderName: action.folderName});
+                break;
+            case "close":
+                dispatch({type: ACTIONS.CLOSE_NEW_FOLDER});
+                break;
+            default:
+                dispatch({type: ACTIONS.FAILED_FOLDER_CREATION});
+                break;
+        }
     }
 
     const uploadFiles = (event) => {
@@ -196,16 +195,11 @@ const SearchBar = () => {
             .catch(_ => dispatch({type: ACTIONS.FAILED_CONTENT_REQUEST}));
     }, [compState.routes] )
 
-    const validationScheme = yup.object({
-        folderName: yup.string().required()
-    })
-
     return (
         <>
         <Box className={classes.serchBox}>
             <Button endIcon={<ExpandMore/>} aria-controls="menu" aria-haspopup={true} className={classes.drop}
-                onClick={(event) => dispatch({type: ACTIONS.OPEN_MENU, event: event})}
-            >
+                onClick={(event) => dispatch({type: ACTIONS.OPEN_MENU, event: event})}>
                 My NoSpace
             </Button>
 
@@ -220,67 +214,20 @@ const SearchBar = () => {
                 <MenuItem onClick={() => dispatch({type: ACTIONS.OPEN_NEW_FOLDER})}>New folder</MenuItem>
             </Menu>
 
-            <TextField className={classes.searchInput} variant="outlined" ref={inputRef}
-                label="Search your files and folders" onChange={filterFilesAndFolders}
-            />
+            <TextField className={classes.searchInput} variant="outlined" label="Search your files and folders"
+            onChange={event => setSearchItem(event.target.value)}/>
         </Box>
-        <Breadcrumbs separator={<NavigateNext/>} className={classes.url}>
-            {compState.routes.map( (item, index) => <Typography key={index} className={classes.breadCrumb}
-            onClick={() => goToRoute(index)}> 
-            {item}</Typography>
-            )}
-        </Breadcrumbs>
 
-        <FilesTable 
-            ACTIONS={ACTIONS}
-            mainSectionRoutes={compState.routes} mainSectionDispatch={dispatch}
-            files={compState.files} folders={compState.folders}
-        />
+        <MyBreadcrumbs routes={compState.routes} goTo={goToRoute}/>
 
-        <Dialog open={compState.openNewFolder}>
-            <DialogTitle>Create a new folder</DialogTitle>
-            <Formik initialValues={{folderName: ""}} onSubmit={(values, {setSubmitting}) => {
-                setSubmitting(true);
-                createNewFolder(compState.rootId, values.folderName)
-                    .then(response => {
-                        dispatch({type: ACTIONS.NEW_FOLDER, newFolder: response.data,
-                        folderName: response.data.folderName});
-                    })
-                    .catch(_ => {
-                        dispatch({type: ACTIONS.FAILED_FOLDER_CREATION});
-                        setSubmitting(false);
-                    })
-            }}
-            validationSchema={validationScheme} validate={(values) => {
-                const errors = {};
-                for(let folder of compState.folders){
-                    if(folder.folderName === values.folderName){
-                        errors.folderName = `There's already a folder called ${values.folderName} on the`+
-                            " current folder, try with a new name"
-                    }
-                }
+        <FilesTable
+            mainActions={ACTIONS} mainDispatcher={dispatch} mainRoutes={compState.routes}
+            files={compState.files.filter(file => file.filename.toLowerCase().includes(serchItem))}
+            folders={compState.folders.filter(folders => folders.folderName.toLowerCase().includes(serchItem))}
+            />
 
-                return errors;
-            }}>
-                {({values, isSubmitting}) => (
-                    <Form>
-                        <DialogContent>
-                            <CustomTextField label={"Folder name"} name={"folderName"} values={values.folderName}/>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button variant={"contained"} color={"secondary"}
-                                    onClick={() => dispatch({type: ACTIONS.CLOSE_NEW_FOLDER})}>
-                                Cancel
-                            </Button>
-                            <Button variant={"contained"} color={"primary"} type={"submit"}
-                                    disabled={isSubmitting}>
-                                Create folder
-                            </Button>
-                        </DialogActions>
-                    </Form>
-                )}
-            </Formik>
-        </Dialog>
+        <NewFolderDialog open={compState.openNewFolder} rootId={compState.rootId} newFolder={newFolder}
+        folders={compState.folders}/>
 
         <MySnackbar open={compState.openSnack} content={compState.snackContent.content} 
             type={compState.snackContent.type}
@@ -288,4 +235,4 @@ const SearchBar = () => {
     </>
 )}
 
-export default SearchBar;
+export default MainSection;

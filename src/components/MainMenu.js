@@ -30,7 +30,7 @@ const MainMenu = ({history}) => {
 
     return (
         <>
-        <Hidden smUp>
+        <Hidden mdUp>
             <AppBar position="static" className={classes.appBar}>
                 <Toolbar>
                     <IconButton onClick={handleOpen}><Menu className={classes.menuIcon}/></IconButton>
@@ -61,6 +61,13 @@ const MainMenu = ({history}) => {
                     <Avatar className={classes.avatar} src={state.currentUser.profilePicture}/>
                 </div>
                 <MainMenuContent/>
+                <Divider />
+                <div className={classes.space}>
+                    <progress className={classes.progress} value={space} max={1024 * 1024 * 2014} />
+                    <Typography className={classes.progresText}>
+                        {convertBytesToReadableSize(space)} used out of 1GB
+                    </Typography>
+                </div>
             </Drawer>
         </Hidden>
         </>

@@ -16,16 +16,12 @@ import { Folder, MoreHoriz } from '@material-ui/icons';
 import {useStyles} from '../styles/TableRowStyles';
 import React, {useReducer} from 'react';
 import {deleteFolder, downloadFolder} from '../utils/contentUtil';
-import MySnackbar from "./MySnackbar";
 
 const ACTIONS = {
     OPEN_MENU: "display_menu",
     CLOSE_MENU: "close_menu",
     OPEN_WARNING: "open_warning",
     CLOSE_WARNING: "close_warning",
-    CLOSE_SNACKBAR: "close_snackbar",
-    FOLDER_DELETE_SUCCESS: "folder_delete_success",
-    FOLDER_DELETE_FAILURE: "folder_delete_failure",
     DISABLE_DELETE_BUTTON: "disable_delete_button"
 }
 
@@ -44,15 +40,7 @@ function reducer(state, action){
             return {...state, displayWarning: false};
 
         case ACTIONS.CLOSE_SNACKBAR:
-            return {...state, snackbar: {...state.snackbar, isOpen: false}};
-
-        case ACTIONS.FOLDER_DELETE_SUCCESS:
-            return {...state, snackbar: {content: `${action.folderName} was deleted successfully`,
-                    type: "error", isOpen: true}};
-
-        case ACTIONS.FOLDER_DELETE_FAILURE:
-            return {...state, snackbar: {content: `${action.folderName} couldn\t be deleted`, type: "error",
-                isOpen: true}};
+            return {...state, folderSnackbar: {...state.folderSnackbar, isOpen: false}};
 
         case ACTIONS.DISABLE_DELETE_BUTTON:
             return {...state, isDeleteFileButtonDisabled: true};
@@ -66,16 +54,16 @@ const initialState = {
     openMenu: false,
     displayWarning: false,
     anchorEl: null,
-    snackbar: {content: "", type: "", isOpen: false},
+    folderSnackbar: {content: "", type: "", isOpen: false},
     isDeleteFileButtonDisabled: false
 }
 
-const FileTableRow = ({MAIN_ACTIONS, folder, mainSectionDispatch}) => {
+const FileTableRow = ({folder, mainActions, mainDispatcher}) => {
     const classes = useStyles();
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const updateRoutes = (name) => {
-        mainSectionDispatch({type: MAIN_ACTIONS.ADD_NEW_ROUTE, route: name})
+        mainDispatcher({type: mainActions.ADD_NEW_ROUTE, route: name});
     }
 
     const download = () => {
@@ -97,15 +85,8 @@ const FileTableRow = ({MAIN_ACTIONS, folder, mainSectionDispatch}) => {
     const deleteFolderById = () => {
         dispatch({type: ACTIONS.DISABLE_DELETE_BUTTON});
         deleteFolder(folder.id)
-            .then(_ => {
-                dispatch({type: ACTIONS.FOLDER_DELETE_SUCCESS, folderName: folder.folderName})
-                mainSectionDispatch({type: MAIN_ACTIONS.REMOVE_FOLDER, folderId: folder.id, 
-                    folderName: folder.folderName});
-            })
-            .catch( _ => {
-                dispatch({type: ACTIONS.FOLDER_DELETE_FAILURE, folderName: folder.folderName});
-                mainSectionDispatch({type: MAIN_ACTIONS.REMOVE_FOLDER_FAILURE, folderName: folder.folderName})
-            })
+            .then(_ => mainDispatcher({type: mainActions.DELETE_FOLDER, id: folder.id, folderName: folder.folderName}))
+            .catch(_ => mainDispatcher({type: mainActions.DELETE_FOLDER_FAILURE, folderName: folder.folderName}))
     }
 
     return (
@@ -155,9 +136,6 @@ const FileTableRow = ({MAIN_ACTIONS, folder, mainSectionDispatch}) => {
                 </Button>
             </DialogActions>
         </Dialog>
-
-            <MySnackbar open={state.snackbar.isOpen} content={state.snackbar.content} type={state.snackbar.type}
-             close={() => dispatch({type: ACTIONS.CLOSE_SNACKBAR})} />
         </>
     )
 }
