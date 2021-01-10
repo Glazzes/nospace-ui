@@ -81,8 +81,8 @@ const SignUp = () => {
         }}>
             {({values, isSubmitting}) => (
                 <Form className={classes.form}>
-                    <Paper elevation={6} >
-                        <Container maxWidth={"md"} className={classes.container}>
+                    <Paper elevation={6}>
+                        <Container maxWidth={"sm"} className={classes.container}>
                             <Typography variant={"h5"} gutterBottom color={"secondary"} align={"center"}>
                                 Sign up today!
                             </Typography>

@@ -40,7 +40,7 @@ const Login = () => {
                     <Form className={classes.form}>
                         <Paper elevation={6} className={classes.container}>
                             <Typography gutterBottom variant={"h5"} align={"center"} color={"secondary"}>Log in!</Typography>
-                            <Container maxWidth={"md"} className={classes.container}>
+                            <Container maxWidth={"sm"} className={classes.container}>
                                 <CustomTextField label={"Username"} name={"username"} value={values.username} type={"text"} />
                                 <CustomTextField label={"Password"} name={"password"} value={values.password} type={"password"} />
                                 <Button type={"submit"} variant={"contained"} color={"secondary"}

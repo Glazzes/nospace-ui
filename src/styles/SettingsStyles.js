@@ -1,26 +1,47 @@
 const { makeStyles } = require("@material-ui/core");
 
 export const useStyles = makeStyles(theme => ({
+    avatarBox:{
+        display: "flex",
+        justifyContent: "center"
+    },
     avatar: {
        width: "100px",
        height: "100px",
-       marginLeft: "calc(50vw - 50px)",
-       marginTop: "20px"
+       cursor: "pointer",
+       "&:hover": {
+           border: `1px solid ${[theme.palette.primary.main]}`
+       }
     },
     input: {
-        width: "80vw",
-        marginBottom: "10px"
+        width: "100%",
+        marginBottom: "20px"
     },
-    btn: {
-        width: "80vw"
+    badgeIcon: {
+        backgroundColor: "white",
+        color: "grey",
+        borderRadius: "50%",
+        padding: "5px",
     },
-    form: {
-        borderRadius: "5px",
-        padding: "20px",
-        width: "80vw",
-        marginTop: "20px",
-        marginLeft: "auto",
-        marginRight: "auto",
-        boxShadow: "0 0 10px"
+    form:{
+        borderRadius: "10px",
+        padding: "10px",
+        margin: "20px",
+        [theme.breakpoints.down("md")]: {
+            position: "absolute",
+            top: "50%",
+            transform: "translateY(-50%)"
+        }
+    },
+    container:{
+        padding: "10px",
+    },
+    paper: {
+        maxWidth: [theme.breakpoints.width("sm")]
+    },
+    buttonBox: {
+        width: "100%",
+        display: "flex",
+        justifyContent: "space-between"
     }
 }))

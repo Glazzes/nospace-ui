@@ -12,7 +12,7 @@ function App() {
   return (
         <BrowserRouter>
           <GlobalState >
-            <Route exact path="/">
+            <Route exact path="/me">
               <MainMenu/>
               <MainSection/>
             </Route>

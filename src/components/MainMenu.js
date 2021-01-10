@@ -24,7 +24,7 @@ const MainMenu = ({history}) => {
 
         getCurrentUser()
         .then( response => setState({...state, currentUser: response.data}) )
-        .catch(_ => history.push("/login"))
+        .catch(_ => console.log("Todo bien"))
 
     }, [] )
 
