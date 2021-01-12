@@ -1,13 +1,16 @@
-import {Avatar, Badge, Box, Button, Container, Paper} from '@material-ui/core'
-import React, {useContext, useEffect, useReducer} from 'react';
+import {Avatar, Badge, Box, Button, Container, Divider, Paper} from '@material-ui/core'
+import React, {useContext, useEffect, useReducer, useState} from 'react';
 import {useStyles} from "../styles/SettingsStyles";
+import {Link} from 'react-router-dom';
 import {Formik, Form} from 'formik';
 import {GlobalContext} from "./GlobalState";
 import * as yup from 'yup';
 import FormTextField from "./FormTextField";
 import MySnackbar from "./MySnackbar";
-import {getCurrentUser} from "../utils/authenticationUtil";
+import {editUserAccount, getCurrentUser} from "../utils/UserUtils";
 import {ImageSearch, NavigateBefore, Save} from "@material-ui/icons";
+import {submitNewProfilePicture} from "../utils/UserUtils";
+import {Skeleton} from "@material-ui/lab";
 
 function reducer(state, action){
     switch (action.type){
@@ -20,9 +23,27 @@ function reducer(state, action){
         case ACTIONS.SET_IMAGE:
             return {...state, avatarImage: action.imageFile};
 
+        case ACTIONS.PPF_REQUEST_SUCCESS:
+            return {...state,
+                snackbar: {content: "Profile picture updated successfully!", type: "success", isOpen: true}
+            }
+
+        case ACTIONS.PPF_REQUEST_FAILURE:
+            return {...state,
+                snackbar: {content: "Couldn't update profile picture, try later!", type: "error", isOpen: true}
+            }
+
         case ACTIONS.FAILED_REQUEST:
             return {...state, snackbar: {
                 content: "Couldn't not retrieve user info", type: "error", isOpen: true}}
+
+        case ACTIONS.ACCOUNT_EDITED_SUCCESS:
+            return {...state, snackbar: {
+                content: "Your account has been successfully updated!", type: "success", isOpen: true}}
+
+        case ACTIONS.ACCOUNT_EDITED_FAILURE:
+            return {...state, snackbar: {
+                    content: "Couldn't update your account", type: "error", isOpen: true}}
 
         default:
             return state;
@@ -33,7 +54,11 @@ const ACTIONS = {
     UPDATE_AVATAR: "update_avatar",
     FAILED_REQUEST: "failed_request",
     CLOSE_SNACKBAR: "close_snackbar",
-    SET_IMAGE: "set_image"
+    SET_IMAGE: "set_image",
+    PPF_REQUEST_SUCCESS: "ppf_request_success",
+    PPF_REQUEST_FAILURE: "ppf_request_failure",
+    ACCOUNT_EDITED_SUCCESS: "account_edited_success",
+    ACCOUNT_EDITED_FAILURE: "account_edited_failure"
 }
 
 const initialState = {
@@ -45,6 +70,8 @@ const initialState = {
 const Settings = () => {
     const classes = useStyles();
     const [state, setState] = useContext(GlobalContext);
+    const [formikValues, setFormikVales] = useState({username: "", newPassword: "", retypeNewPassword: ""})
+    const [isLoading, setIsLoading] = useState(true);
     const [compState, dispatch] = useReducer(reducer, initialState);
 
     const displayPreview = (event) => {
@@ -61,35 +88,55 @@ const Settings = () => {
 
     const validationSchema = yup.object({
         username: yup.string().min(3).max(50).required(),
-        password: yup.string().min(8).max(100).required(),
-        retype: yup.string().min(8).max(100).required(),
+        newPassword: yup.string().min(8).max(100),
+        retypeNewPassword: yup.string().min(8).max(100)
     })
 
     useEffect(() => {
         getCurrentUser()
-            .then(response => setState(response.data))
+            .then(response => {
+                dispatch({type: ACTIONS.UPDATE_AVATAR, avatarUrl: response.data.profilePicture});
+                setFormikVales({...formikValues, username: response.data.nickname});
+                setState({...state, currentUser: response.data});
+                setIsLoading(false);
+            })
             .catch(_ => dispatch({type: ACTIONS.FAILED_REQUEST}));
     }, [])
 
     return (
         <>
             <Formik
-                initialValues={{username: "Hello", password: "glazeglaze", retype: "glazeglaze"}}
-                onSubmit={(values, {setSubmitting, resetForm, setErrors}) => {
-                    setSubmitting(true);
-
-                    if(state.currentUser.profilePicture !== compState.avatarUrl){
-                        console.log("They're different pictures");
+                enableReinitialize
+                initialValues={formikValues}
+                onSubmit={(values, {setSubmitting}) => {
+                    if(compState.avatarImage){
+                        setSubmitting(true);
+                        submitNewProfilePicture(compState.avatarImage)
+                            .then(response => {
+                                setState({...state, currentUser: response.data});
+                                dispatch({type: ACTIONS.PPF_REQUEST_SUCCESS})
+                                dispatch({type: ACTIONS.UPDATE_AVATAR, avatarUrl: response.data.profilePicture});
+                                setSubmitting(false);
+                            })
+                            .catch(_ => {
+                                dispatch({type: ACTIONS.PPF_REQUEST_FAILURE})
+                                setSubmitting(false);})
                     }
 
-                    setTimeout(() => {
-                        setSubmitting(false);
-                    }, 2000);
+                    if(values.username && values.newPassword && values.retypeNewPassword){
+                        setSubmitting(true);
+                        editUserAccount({username: values.username, password: values.password})
+                            .then(response => {
+                                dispatch({type: ACTIONS.ACCOUNT_EDITED_SUCCESS})
+                                setState({...state, currentUser: response.data});
+                            }).catch(_ => dispatch({type: ACTIONS.ACCOUNT_EDITED_FAILURE}));
+                    }
+
                 }}
                 validationSchema={validationSchema}
                 validate={(values) => {
                     const errors = {};
-                    if(values.password !== values.retype) errors.password = "Passwords don't match";
+                    if(values.newPassword !== values.retypeNewPassword) errors.newPassword = "Passwords don't match";
                     return errors;
                 }}>
                 {({values, isSubmitting}) => (
@@ -97,30 +144,39 @@ const Settings = () => {
                         <Paper elevation={6} className={classes.paper}>
                             <Container maxWidth={"sm"} className={classes.container}>
                                 <Box className={classes.avatarBox}>
-                                    <label htmlFor={"pick-image"}>
-                                        <Badge overlap={"circle"} anchorOrigin={{vertical: "bottom", horizontal:"right"}}
-                                               badgeContent={<ImageSearch className={classes.badgeIcon}/>}>
-                                            <Avatar src={compState.avatarUrl}
-                                                    alt={`${state.currentUser.profilePicture}'s profile picture`}
-                                                    className={classes.avatar}/>
-                                        </Badge>
-                                    </label>
+                                    {isLoading ?
+                                        <Skeleton height={100} width={100} variant={"circle"} />
+                                        :
+                                        <label htmlFor={"pick-image"}>
+                                            <Badge overlap={"circle"} anchorOrigin={{vertical: "bottom", horizontal:"right"}}
+                                                   badgeContent={<ImageSearch className={classes.badgeIcon}/>}>
+                                                <Avatar src={compState.avatarUrl}
+                                                        alt={`${state.currentUser.profilePicture}'s profile picture`}
+                                                        className={classes.avatar}/>
+                                            </Badge>
+                                        </label>
+                                    }
                                 </Box>
                                 <input id={"pick-image"} type={"file"} accept={"image/*"} hidden onChange={displayPreview}/>
 
                                 <FormTextField label={"Username"} type={"text"} name={"username"}
                                                value={values.username}/>
 
-                                <FormTextField label={"Username"} type={"password"} name={"password"}
-                                               value={values.password}/>
+                                <Divider className={classes.divider}/>
 
-                                <FormTextField label={"Username"} type={"password"} name={"retype"}
-                                               value={values.retype}/>
+                                <FormTextField label={"New password"} type={"password"} name={"newPassword"}
+                                               value={values.newPassword}/>
+
+                                <FormTextField label={"Retype new password"} type={"password"} name={"retypeNewPassword"}
+                                               value={values.retypeNewPassword}/>
 
                                 <Box className={classes.buttonBox}>
-                                    <Button variant={"contained"} color={"secondary"} startIcon={<NavigateBefore/>}>
-                                        Go back
-                                    </Button>
+                                    <Link to={"/me"} className={classes.link}>
+                                        <Button variant={"contained"} color={"secondary"} startIcon={<NavigateBefore/>}>
+                                            Go back
+                                        </Button>
+                                    </Link>
+
                                     <Button variant={"contained"} color={"primary"} type={"submit"}
                                             endIcon={<Save/>} disabled={isSubmitting}>
                                         Save changes

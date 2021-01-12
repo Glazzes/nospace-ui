@@ -13,6 +13,16 @@ export const useStyles = makeStyles(theme => ({
            border: `1px solid ${[theme.palette.primary.main]}`
        }
     },
+    divider: {
+      width: "100%" ,
+      margin: "10px 0 20px 0"
+    },
+    inputBox: {
+      width: "100%",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center"
+    },
     input: {
         width: "100%",
         marginBottom: "20px"
@@ -30,7 +40,7 @@ export const useStyles = makeStyles(theme => ({
         [theme.breakpoints.down("md")]: {
             position: "absolute",
             top: "50%",
-            transform: "translateY(-50%)"
+            transform: "translateY(-50%)",
         }
     },
     container:{
@@ -43,5 +53,9 @@ export const useStyles = makeStyles(theme => ({
         width: "100%",
         display: "flex",
         justifyContent: "space-between"
+    },
+    link: {
+        textDecoration: "none",
+        color: theme.palette.text.primary
     }
 }))

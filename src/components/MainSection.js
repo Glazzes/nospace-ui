@@ -8,7 +8,7 @@ import {
 import { ExpandMore } from '@material-ui/icons';
 import React, {useContext, useEffect, useReducer, useState} from 'react';
 import {useStyles} from '../styles/MainSectionStyles';
-import { getCurrentUser } from '../utils/authenticationUtil';
+import { getCurrentUser } from '../utils/UserUtils';
 import FilesTable from './FilesTable';
 import { GlobalContext } from './GlobalState';
 import { getCurrentContent, fileUpload } from '../utils/contentUtil';

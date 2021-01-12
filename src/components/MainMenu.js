@@ -4,14 +4,16 @@ import {useStyles} from '../styles/MainMenuStyles';
 import { Menu } from '@material-ui/icons';
 import MainMenuContent from './MainMenuContent';
 import {GlobalContext} from './GlobalState';
-import { getCurrentUser } from '../utils/authenticationUtil';
+import { getCurrentUser } from '../utils/UserUtils';
 import {getUsedSpace, convertBytesToReadableSize} from '../utils/contentUtil';
+import {Skeleton} from "@material-ui/lab";
 
-const MainMenu = ({history}) => {
+const MainMenu = () => {
     const classes = useStyles();
 
     const [state, setState] = useContext(GlobalContext);
     const [space, setSpace] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [open, setOpen] = useState(false);
     const handleOpen = () => {setOpen(true)}
@@ -23,7 +25,10 @@ const MainMenu = ({history}) => {
             .catch(_ => console.log("Could not get the used space"));
 
         getCurrentUser()
-        .then( response => setState({...state, currentUser: response.data}) )
+        .then( response => {
+            setState({...state, currentUser: response.data});
+            setIsLoading(false);
+        })
         .catch(_ => console.log("Todo bien"))
 
     }, [] )
@@ -34,7 +39,10 @@ const MainMenu = ({history}) => {
             <AppBar position="static" className={classes.appBar}>
                 <Toolbar>
                     <IconButton onClick={handleOpen}><Menu className={classes.menuIcon}/></IconButton>
-                    <Typography style={{textTransform: "capitalize"}}>{state.currentUser.nickname + "'s"} NoSpace</Typography>
+                    {isLoading && <Skeleton variant={"text"} width={300} height={50}/>}
+                    {!isLoading &&
+                        <Typography style={{textTransform: "capitalize"}}>{state.currentUser.nickname + "'s"} NoSpace</Typography>
+                    }
                 </Toolbar>
             </AppBar>
             <SwipeableDrawer anchor="left" open={open} onOpen={handleOpen} onClose={handleClose}
@@ -58,7 +66,11 @@ const MainMenu = ({history}) => {
         <Hidden mdDown>
             <Drawer variant="permanent">
                 <div className={classes.permaAvatarBox}>
-                    <Avatar className={classes.avatar} src={state.currentUser.profilePicture}/>
+                    {isLoading ?
+                        <Skeleton variant={"circle"} width={100} height={100} />
+                        :
+                        <Avatar className={classes.avatar} src={state.currentUser.profilePicture}/>
+                    }
                 </div>
                 <MainMenuContent/>
                 <Divider />

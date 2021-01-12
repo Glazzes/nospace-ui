@@ -7,7 +7,3 @@ export const login = (user) => {
 export const signUp = (user) => {
     return axios.post(`http://localhost:8080/api/account/register`, user, {withCredentials: true});
 }
-
-export const getCurrentUser = () => {
-    return axios.get("http://localhost:8080/api/account/me", {withCredentials: true});
-}

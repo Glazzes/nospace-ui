@@ -81,24 +81,24 @@ const FileTableRow = ({file, mainActions, mainDispatcher}) => {
 
     return (
         <>
-        <TableRow>
-            <TableCell className={classes.title}>
-                <Box className={classes.titleBox}>
-                    <FileCopy className={classes.fileIcon} />
-                    <Typography>{file.filename}</Typography>
-                </Box>
-            </TableCell>
-            <Hidden mdDown>
-                <TableCell>{convertBytesToReadableSize(file.fileSize)}</TableCell>
-                <TableCell>{file.uploadedAt}</TableCell>
-            </Hidden>
-            <TableCell>
-                <IconButton aria-controls="options" 
-                    onClick={(event) => dispatch({type: ACTIONS.OPEN_MENU, anchorEl: event})}>
-                    <MoreHoriz fontSize="small"/>
-                </IconButton>
-            </TableCell>
-        </TableRow>
+                <TableRow>
+                    <TableCell className={classes.title}>
+                        <Box className={classes.titleBox}>
+                            <FileCopy className={classes.fileIcon} />
+                            <Typography>{file.filename}</Typography>
+                        </Box>
+                    </TableCell>
+                    <Hidden mdDown>
+                        <TableCell>{convertBytesToReadableSize(file.fileSize)}</TableCell>
+                        <TableCell>{file.uploadedAt}</TableCell>
+                    </Hidden>
+                    <TableCell>
+                        <IconButton aria-controls="options"
+                                    onClick={(event) => dispatch({type: ACTIONS.OPEN_MENU, anchorEl: event})}>
+                            <MoreHoriz fontSize="small"/>
+                        </IconButton>
+                    </TableCell>
+                </TableRow>
 
         <Menu id="options" anchorOrigin={{vertical: "bottom", horizontal: "left"}}
             open={state.openMenu} anchorEl={state.anchorEl} 
