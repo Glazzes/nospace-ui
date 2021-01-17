@@ -10,62 +10,40 @@ import {
     Typography
 } from '@material-ui/core'
 import { FileCopy, MoreHoriz } from '@material-ui/icons'
-import {useStyles} from '../styles/TableRowStyles';
+import {useStyles} from '../../styles/TableRowStyles';
 import React, {useReducer} from 'react'
-import {deleteFile, downloadFile, convertBytesToReadableSize} from '../utils/contentUtil';
+import {deleteFile, downloadFile} from '../../utils/FileUtils';
+import {convertBytesToReadableSize} from '../../utils/FolderUtils';
+import RenameFileDialog from "../RenameFileDialog";
 
-const ACTIONS = {
-    OPEN_MENU: "open_menu",
-    CLOSE_MENU: "close_menu",
-    CLOSE_SNACKBAR: "close_snackbar",
-    DISPLAY_WARNING: "display_warning",
-    DISABLE_DELETE_BUTTON: "disable_delete_button"
-}
+import FilesTableRowActions from "./FilesTableRowActions";
+import filesTableRowReducer from "./FilesTableRowReducer";
 
-function reducer(state, action){
-    switch(action.type){
-        case ACTIONS.DISPLAY_WARNING:
-            return {...state, displayWarning: true, openMenu: false}
-
-        case ACTIONS.CLOSE_WARNING:
-            return {...state, displayWarning: false}
-
-        case ACTIONS.OPEN_MENU:
-            return {...state, openMenu: true, anchorEl: action.anchorEl.currentTarget}
-
-        case ACTIONS.CLOSE_MENU:
-            return {...state, openMenu: false}
-
-        case ACTIONS.DISABLE_DELETE_BUTTON:
-            return {...state, isDeleteFileButtonDisabled: true};
-
-        default:
-            return state;
-    }
-}
+import MainSectionActions from "../MainSection/MainSecionActions";
 
 const initialState = {
     openMenu: false,
     anchorEl: null,
     displayWarning: false,
-    isDeleteFileButtonDisabled: false
+    isDeleteFileButtonDisabled: false,
+    openRenameDialog: false
 }
 
-const FileTableRow = ({file, mainActions, mainDispatcher}) => {
+const FileTableRow = ({mainDispatcher, allFiles, file}) => {
     const classes = useStyles();
-    const [state, dispatch] = useReducer(reducer, initialState);
+    const [state, dispatch] = useReducer(filesTableRowReducer, initialState);
 
     const deleteFileById = () => {
-        dispatch({type: ACTIONS.DISABLE_DELETE_BUTTON});
+        dispatch({type: FilesTableRowActions.DISABLE_DELETE_BUTTON});
         deleteFile(file.id)
-            .then(_ => mainDispatcher({type: mainActions.REMOVE_FILE_BY_ID, id: file.id, filename: file.filename}))
-            .catch(_ => mainDispatcher({type: mainActions.REMOVE_FILE_BY_ID_FAILURE, filename: file.filename}));
+            .then(_ => mainDispatcher({type: MainSectionActions.REMOVE_FILE_BY_ID, id: file.id, filename: file.filename}))
+            .catch(_ => mainDispatcher({type: MainSectionActions.REMOVE_FILE_BY_ID_FAILURE, filename: file.filename}));
     }
 
     const download = () => {
         downloadFile(file.id)
             .then(response => {
-                dispatch({type: ACTIONS.CLOSE_MENU});
+                dispatch({type: FilesTableRowActions.CLOSE_MENU});
                 const url = window.URL.createObjectURL(
                     new Blob([response.data], {type: response.headers.["content-type"]}));
                 const link = document.createElement("a");
@@ -94,7 +72,7 @@ const FileTableRow = ({file, mainActions, mainDispatcher}) => {
                     </Hidden>
                     <TableCell>
                         <IconButton aria-controls="options"
-                                    onClick={(event) => dispatch({type: ACTIONS.OPEN_MENU, anchorEl: event})}>
+                                    onClick={(event) => dispatch({type: FilesTableRowActions.OPEN_MENU, anchorEl: event})}>
                             <MoreHoriz fontSize="small"/>
                         </IconButton>
                     </TableCell>
@@ -102,10 +80,11 @@ const FileTableRow = ({file, mainActions, mainDispatcher}) => {
 
         <Menu id="options" anchorOrigin={{vertical: "bottom", horizontal: "left"}}
             open={state.openMenu} anchorEl={state.anchorEl} 
-            onClose={() => dispatch({type: ACTIONS.CLOSE_MENU})}
+            onClose={() => dispatch({type: FilesTableRowActions.CLOSE_MENU})}
         >
             <MenuItem onClick={download}>Download</MenuItem>
-            <MenuItem onClick={() => dispatch({type: ACTIONS.DISPLAY_WARNING})}>Delete</MenuItem>
+            <MenuItem onClick={() => dispatch({type: FilesTableRowActions.OPEN_RENAME_DIALOG})}>Rename</MenuItem>
+            <MenuItem onClick={() => dispatch({type: FilesTableRowActions.DISPLAY_WARNING})}>Delete</MenuItem>
         </Menu>
 
          <Dialog open={state.displayWarning}>
@@ -117,7 +96,7 @@ const FileTableRow = ({file, mainActions, mainDispatcher}) => {
              </DialogContent>
              <DialogActions>
                  <Button variant={"contained"} color={"secondary"}
-                         onClick={() => dispatch({type: ACTIONS.CLOSE_WARNING})}>
+                         onClick={() => dispatch({type: FilesTableRowActions.CLOSE_WARNING})}>
                      Cancel
                  </Button>
                  <Button variant={"outlined"} color={"primary"} onClick={deleteFileById}
@@ -126,6 +105,12 @@ const FileTableRow = ({file, mainActions, mainDispatcher}) => {
                  </Button>
              </DialogActions>
          </Dialog>
+
+         <RenameFileDialog file={file} open={state.openRenameDialog}
+                           close={() => dispatch({type: FilesTableRowActions.CLOSE_DIALOG})}
+                           dispatch={dispatch}
+                           mainDispatcher={mainDispatcher}
+                           actions={FilesTableRowActions} allFiles={allFiles}/>
         </>
     )
 }

@@ -10,10 +10,26 @@ export const useStyles = makeStyles( theme => ({
             height: "100vh",
         },
     },
-    form:{
+    login:{
         borderRadius: "10px",
         padding: "10px",
         margin: "20px",
+        position: "absolute",
+        top: 0,
+        transform: "translateY(50%) translateX(130%)",
+        [theme.breakpoints.down("xs")]: {
+            position: "absolute",
+            top: "50%",
+            transform: "translateY(-50%)"
+        }
+    },
+    signup:{
+        borderRadius: "10px",
+        padding: "10px",
+        margin: "20px",
+        position: "absolute",
+        top: 0,
+        transform: "translateY(20%) translateX(112%)",
         [theme.breakpoints.down("xs")]: {
             position: "absolute",
             top: "50%",

@@ -3,11 +3,13 @@ import {useStyles} from '../styles/TableRowStyles';
 import React from 'react'
 import { ArrowBack } from '@material-ui/icons';
 
-const GoBackCell = ({mainActions, mainDispatcher}) => {
+import MainSectionActions from "./MainSection/MainSecionActions";
+
+const GoBackCell = ({mainDispatcher}) => {
     const classes = useStyles();
 
     const goBack = () => {
-        mainDispatcher({type: mainActions.GO_BACK})
+        mainDispatcher({type: MainSectionActions.GO_BACK})
     }
 
     return (

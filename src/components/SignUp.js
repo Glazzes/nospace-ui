@@ -80,7 +80,7 @@ const SignUp = () => {
             return errors;
         }}>
             {({values, isSubmitting}) => (
-                <Form className={classes.form}>
+                <Form className={classes.signup}>
                     <Paper elevation={6}>
                         <Container maxWidth={"sm"} className={classes.container}>
                             <Typography variant={"h5"} gutterBottom color={"secondary"} align={"center"}>

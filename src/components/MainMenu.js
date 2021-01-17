@@ -5,7 +5,7 @@ import { Menu } from '@material-ui/icons';
 import MainMenuContent from './MainMenuContent';
 import {GlobalContext} from './GlobalState';
 import { getCurrentUser } from '../utils/UserUtils';
-import {getUsedSpace, convertBytesToReadableSize} from '../utils/contentUtil';
+import {getUsedSpace, convertBytesToReadableSize} from '../utils/FolderUtils';
 import {Skeleton} from "@material-ui/lab";
 
 const MainMenu = () => {
@@ -63,7 +63,7 @@ const MainMenu = () => {
             </SwipeableDrawer>
         </Hidden>
         
-        <Hidden mdDown>
+        <Hidden smDown>
             <Drawer variant="permanent">
                 <div className={classes.permaAvatarBox}>
                     {isLoading ?

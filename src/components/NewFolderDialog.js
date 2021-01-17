@@ -1,7 +1,7 @@
 import React from "react";
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@material-ui/core";
 import {Form, Formik, useField} from "formik";
-import {createNewFolder} from "../utils/contentUtil";
+import {createNewFolder} from "../utils/FolderUtils";
 import {useStyles} from "../styles/MainSectionStyles";
 import * as yup from "yup";
 
@@ -45,7 +45,7 @@ const NewFolderDialog = ({open, rootId, newFolder, folders}) => {
                 {({values, isSubmitting}) => (
                     <Form>
                         <DialogContent>
-                            <CustomTextField label={"Folder name"} name={"folderName"} values={values.folderName}/>
+                            <CustomTextField label={"Folder name"} name={"folderName"} value={values.folderName}/>
                         </DialogContent>
                         <DialogActions>
                             <Button variant={"contained"} color={"secondary"}

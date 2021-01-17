@@ -37,7 +37,7 @@ const Login = () => {
             }}
             validationSchema={validationScheme}>
                 {({values, isSubmitting}) => (
-                    <Form className={classes.form}>
+                    <Form className={classes.login}>
                         <Paper elevation={6} className={classes.container}>
                             <Typography gutterBottom variant={"h5"} align={"center"} color={"secondary"}>Log in!</Typography>
                             <Container maxWidth={"sm"} className={classes.container}>

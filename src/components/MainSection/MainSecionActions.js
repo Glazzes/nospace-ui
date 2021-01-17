@@ -1,0 +1,30 @@
+const MainSectionActions = {
+    NEW_FOLDER: "new_folder",
+    SET_FILES: "set_files",
+    SET_FOLDERS: "set_folders",
+    SET_ROOT_ID: "set_root_id",
+    OPEN_NEW_FOLDER: "open_new_folder",
+    CLOSE_NEW_FOLDER: "close_new_folder",
+    OPEN_MENU: "open_menu",
+    CLOSE_MENU: "close_menu",
+    OPEN_SNACK: "open_success_snack",
+    CLOSE_SNACK: "close_snack",
+    GO_TO_ROUTE: "go_to_route",
+    GO_BACK: "go_back",
+    ADD_NEW_ROUTE: "add_new_route",
+    UPLOADED_FILES: "uploaded_files",
+    FAILED_UPLOAD: "failed_upload",
+    FAILED_CONTENT_REQUEST: "failed_content_request",
+    FAILED_FOLDER_CREATION: "failed_folder_creation",
+    REMOVE_FOLDER: "remove_folder",
+    REMOVE_FILE_BY_ID: "remove_file_by_id",
+    REMOVE_FILE_BY_ID_FAILURE: "remove_file_by_id_failure",
+    DELETE_FOLDER: "delete_folder",
+    DELETE_FOLDER_FAILURE: "delete_folder_failure",
+    FILTER_CONTENT: "filter_content",
+    RENAME_FILES: "rename_files",
+    FILE_RENAMED_SUCCESSFULLY: "file_renamed_successfully",
+    FILE_RENAME_FAILURE: "file_rename_failure"
+}
+
+export default MainSectionActions;

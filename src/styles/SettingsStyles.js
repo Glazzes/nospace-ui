@@ -1,6 +1,10 @@
 const { makeStyles } = require("@material-ui/core");
 
 export const useStyles = makeStyles(theme => ({
+    root: {
+      marginRight: "auto",
+      marginLeft: "auto"
+    },
     avatarBox:{
         display: "flex",
         justifyContent: "center"
@@ -10,7 +14,7 @@ export const useStyles = makeStyles(theme => ({
        height: "100px",
        cursor: "pointer",
        "&:hover": {
-           border: `1px solid ${[theme.palette.primary.main]}`
+           filter : "grayscale(100%)"
        }
     },
     divider: {
@@ -36,7 +40,8 @@ export const useStyles = makeStyles(theme => ({
     form:{
         borderRadius: "10px",
         padding: "10px",
-        margin: "20px",
+        marginLeft: "auto",
+        marginRight: "auto",
         [theme.breakpoints.down("md")]: {
             position: "absolute",
             top: "50%",
@@ -47,7 +52,9 @@ export const useStyles = makeStyles(theme => ({
         padding: "10px",
     },
     paper: {
-        maxWidth: [theme.breakpoints.width("sm")]
+        maxWidth: [theme.breakpoints.width("sm")],
+        marginRight: "auto",
+        marginLeft: "auto"
     },
     buttonBox: {
         width: "100%",

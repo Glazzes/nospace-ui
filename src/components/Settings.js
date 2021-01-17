@@ -104,11 +104,11 @@ const Settings = () => {
     }, [])
 
     return (
-        <>
+        <React.Fragment>
             <Formik
                 enableReinitialize
                 initialValues={formikValues}
-                onSubmit={(values, {setSubmitting}) => {
+                onSubmit={(values, {setSubmitting, resetForm}) => {
                     if(compState.avatarImage){
                         setSubmitting(true);
                         submitNewProfilePicture(compState.avatarImage)
@@ -123,13 +123,20 @@ const Settings = () => {
                                 setSubmitting(false);})
                     }
 
-                    if(values.username && values.newPassword && values.retypeNewPassword){
+                    if(values.username || (values.newPassword && values.retypeNewPassword)){
                         setSubmitting(true);
                         editUserAccount({username: values.username, password: values.password})
                             .then(response => {
                                 dispatch({type: ACTIONS.ACCOUNT_EDITED_SUCCESS})
                                 setState({...state, currentUser: response.data});
-                            }).catch(_ => dispatch({type: ACTIONS.ACCOUNT_EDITED_FAILURE}));
+                                setSubmitting(false);
+                                resetForm();
+                            }).catch(error => {
+                                console.log(error.response.data);
+                                dispatch({type: ACTIONS.ACCOUNT_EDITED_FAILURE});
+                                setSubmitting(false);
+
+                        });
                     }
 
                 }}
@@ -190,7 +197,7 @@ const Settings = () => {
 
             <MySnackbar open={compState.snackbar.isOpen} type={compState.snackbar.type}
                         content={compState.snackbar.content} close={() => dispatch({type: ACTIONS.CLOSE_SNACKBAR})} />
-        </>
+        </React.Fragment>
     )
 }
 

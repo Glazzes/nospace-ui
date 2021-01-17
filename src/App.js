@@ -6,7 +6,7 @@ import Login from "./components/Login";
 import SignUp from './components/SignUp';
 import Settings from './components/Settings';
 import GlobalState from './components/GlobalState';
-import MainSection from "./components/MainSection";
+import MainSection from "./components/MainSection/MainSection";
 
 function App() {
   return (
@@ -22,7 +22,6 @@ function App() {
               <Settings/>
             </Route>
 
-            <Route path="/test" component={Test} />
             <Route path="/login" component={Login}/>
             <Route path="/sign-up" component={SignUp}/>
 
