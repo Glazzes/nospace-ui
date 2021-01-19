@@ -1,10 +1,11 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@material-ui/core";
 import {Form, Formik, useField} from "formik";
 import {renameFile} from "../utils/FileUtils";
 import * as yup from 'yup';
 import {useStyles} from "../styles/MainSectionStyles";
-
+import EventEmitter from "../utils/EventEmitter";
+import {EventConstants} from "../utils/EventEmitter";
 import ACTIONS from "./MainSection/MainSecionActions";
 
 const validationSchema = yup.object({
@@ -18,7 +19,7 @@ const CustomTextField = ({label, disabled, ...props}) => {
     return <TextField {...field} label={label} helperText={errorText} variant={"outlined"} className={classes.newFolderInput} disabled={disabled}/>
 }
 
-const RenameFileDialog = ({allFiles, file, open, close, actions, dispatch, mainDispatcher}) => {
+const RenameFileDialog = ({allFiles, file, open, close}) => {
 
     return (
         <Dialog open={open}>
@@ -27,16 +28,17 @@ const RenameFileDialog = ({allFiles, file, open, close, actions, dispatch, mainD
                 setSubmitting(true);
                 renameFile(file.id, values.filename)
                     .then(_ => {
-                        mainDispatcher({type: ACTIONS.FILE_RENAMED_SUCCESSFULLY,
-                            oldName: file.filename, newName: values.filename});
-                        close();
+                        EventEmitter.emit(EventConstants.FILE_RENAMED_SUCCESSFULLY, {
+                            type: ACTIONS.FILE_RENAMED_SUCCESSFULLY, oldName: file.filename, newName: values.filename
+                        })
                         setSubmitting(false);
                     })
                     .catch(_ => {
-                        mainDispatcher({type: ACTIONS.FILE_RENAME_FAILURE,
-                            oldName: file.filename, newName: values.filename});
+                        EventEmitter.emit(EventConstants.FILE_RENAME_FAILURE, {
+                            type: ACTIONS.FILE_RENAME_FAILURE, oldName: file.filename, newName: values.filename
+                        })
                         setSubmitting(false);
-                    });
+                    })
             }}
             validationSchema={validationSchema}
             validate={(values) => {

@@ -2,15 +2,13 @@ import { TableCell, TableRow, Box, Typography, Hidden } from '@material-ui/core'
 import {useStyles} from '../styles/TableRowStyles';
 import React from 'react'
 import { ArrowBack } from '@material-ui/icons';
+import EventEmitter, {EventConstants} from "../utils/EventEmitter";
 
 import MainSectionActions from "./MainSection/MainSecionActions";
 
-const GoBackCell = ({mainDispatcher}) => {
+const GoBackCell = () => {
     const classes = useStyles();
-
-    const goBack = () => {
-        mainDispatcher({type: MainSectionActions.GO_BACK})
-    }
+    const goBack = () => EventEmitter.emit(EventConstants.GO_BACK, {type: MainSectionActions.GO_BACK})
 
     return (
         <TableRow className={classes.goBack} onClick={goBack}>

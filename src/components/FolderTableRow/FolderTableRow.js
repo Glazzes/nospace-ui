@@ -16,7 +16,7 @@ import { Folder, MoreHoriz } from '@material-ui/icons';
 import {useStyles} from '../../styles/TableRowStyles';
 import React, {useReducer} from 'react';
 import {deleteFolder, downloadFolder} from '../../utils/FolderUtils';
-
+import EventEmitter, {EventConstants} from "../../utils/EventEmitter";
 import MainSectionActions from "../MainSection/MainSecionActions";
 import FolderTableRowActions from "./FolderTableRowActions";
 import folderTableRowReducer from "./FolderTableRowReducer";
@@ -29,13 +29,11 @@ const initialState = {
     isDeleteFileButtonDisabled: false
 }
 
-const FileTableRow = ({folder, mainDispatcher}) => {
+const FileTableRow = ({folder}) => {
     const classes = useStyles();
     const [state, dispatch] = useReducer(folderTableRowReducer, initialState);
 
-    const updateRoutes = (name) => {
-        mainDispatcher({type: MainSectionActions.ADD_NEW_ROUTE, route: name});
-    }
+    const updateRoutes = (name) => EventEmitter.emit(EventConstants.ADD_NEW_ROUTE, {route: name});
 
     const download = () => {
         downloadFolder(folder.id)
@@ -56,10 +54,11 @@ const FileTableRow = ({folder, mainDispatcher}) => {
     const deleteFolderById = () => {
         dispatch({type: FolderTableRowActions.DISABLE_DELETE_BUTTON});
         deleteFolder(folder.id)
-            .then(_ => mainDispatcher(
-                {type: MainSectionActions.DELETE_FOLDER, id: folder.id, folderName: folder.folderName}))
-            .catch(_ => mainDispatcher({
-                type: MainSectionActions.DELETE_FOLDER_FAILURE, folderName: folder.folderName}))
+            .then(_ => EventEmitter.emit(EventConstants.DELETE_FOLDER, {
+                type: MainSectionActions.DELETE_FOLDER, id: folder.id, folderName: folder.folderName}) )
+            .catch(_ => EventEmitter.emit(EventConstants.REMOVE_FILE_BY_ID_FAILURE, {
+                type: MainSectionActions.DELETE_FOLDER_FAILURE, folderName: folder.folderName
+            }));
     }
 
     return (

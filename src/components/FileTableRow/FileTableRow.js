@@ -15,6 +15,8 @@ import React, {useReducer} from 'react'
 import {deleteFile, downloadFile} from '../../utils/FileUtils';
 import {convertBytesToReadableSize} from '../../utils/FolderUtils';
 import RenameFileDialog from "../RenameFileDialog";
+import EventEmitter from "../../utils/EventEmitter";
+import {EventConstants} from "../../utils/EventEmitter";
 
 import FilesTableRowActions from "./FilesTableRowActions";
 import filesTableRowReducer from "./FilesTableRowReducer";
@@ -29,15 +31,19 @@ const initialState = {
     openRenameDialog: false
 }
 
-const FileTableRow = ({mainDispatcher, allFiles, file}) => {
+const FileTableRow = ({allFiles, file}) => {
     const classes = useStyles();
     const [state, dispatch] = useReducer(filesTableRowReducer, initialState);
 
     const deleteFileById = () => {
         dispatch({type: FilesTableRowActions.DISABLE_DELETE_BUTTON});
         deleteFile(file.id)
-            .then(_ => mainDispatcher({type: MainSectionActions.REMOVE_FILE_BY_ID, id: file.id, filename: file.filename}))
-            .catch(_ => mainDispatcher({type: MainSectionActions.REMOVE_FILE_BY_ID_FAILURE, filename: file.filename}));
+            .then(_ => EventEmitter.emit(EventConstants.REMOVE_FILE_BY_ID, {
+                type: MainSectionActions.REMOVE_FILE_BY_ID, id: file.id, filename: file.filename
+            }))
+            .catch(_ => EventEmitter.emit(EventConstants.REMOVE_FILE_BY_ID_FAILURE, {
+                type: MainSectionActions.REMOVE_FILE_BY_ID_FAILURE, filename: file.filename
+            }));
     }
 
     const download = () => {
@@ -109,7 +115,6 @@ const FileTableRow = ({mainDispatcher, allFiles, file}) => {
          <RenameFileDialog file={file} open={state.openRenameDialog}
                            close={() => dispatch({type: FilesTableRowActions.CLOSE_DIALOG})}
                            dispatch={dispatch}
-                           mainDispatcher={mainDispatcher}
                            actions={FilesTableRowActions} allFiles={allFiles}/>
         </>
     )

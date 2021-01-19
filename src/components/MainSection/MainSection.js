@@ -6,7 +6,7 @@ import {
     TextField,
 } from '@material-ui/core'
 import { ExpandMore } from '@material-ui/icons';
-import React, {useCallback, useContext, useEffect, useMemo, useReducer, useState} from 'react';
+import React, {useContext, useEffect, useMemo, useReducer, useState} from 'react';
 import {useStyles} from '../../styles/MainSectionStyles';
 import { getCurrentUser } from '../../utils/UserUtils';
 import FilesTable from '../FilesTable';
@@ -16,6 +16,7 @@ import {fileUpload} from '../../utils/FileUtils';
 import MySnackbar from '../MySnackbar';
 import MyBreadcrumbs from '../MyBreadcrumbs';
 import NewFolderDialog from "../NewFolderDialog";
+import EventEmitter, {EventConstants} from "../../utils/EventEmitter";
 
 import ACTIONS from "./MainSecionActions";
 import mainSectionReducer from "./MainSectionReducer";
@@ -39,8 +40,7 @@ const MainSection = () => {
     const [compState, dispatch] = useReducer(mainSectionReducer, initialState);
     const [searchItem, setSearchItem] = useState("");
 
-    // achieving performance
-    const memoDispatch = useCallback(dispatch, [dispatch]);
+    // achieving performance by caching
     const memoRoutes = useMemo(() => compState.routes, [compState.routes]);
     const memoFiles = useMemo(() => {
         return compState.files.filter(file => file.filename.toLowerCase().includes(searchItem));
@@ -50,10 +50,8 @@ const MainSection = () => {
         return compState.folders.filter(folder => folder.folderName.toLowerCase().includes(searchItem));
     }, [compState.folders, searchItem]);
 
-    const goToRoute = (index) => {
-        dispatch({type: ACTIONS.GO_TO_ROUTE, index: index});
-    }
 
+    // Functions triggered by the component
     const newFolder = (action) => {
         switch (action.type){
             case 'success':
@@ -72,7 +70,6 @@ const MainSection = () => {
     const uploadFiles = (event) => {
         let existingFiles =[];
 
-        console.log(event.target.files)
         for(let file of event.target.files){
             for(let innerFile of compState.files){
                 if(file.name === innerFile.filename){
@@ -98,6 +95,32 @@ const MainSection = () => {
             dispatch({type: ACTIONS.RENAME_FILES, errorMessage: failedMessage})
         }
     }
+
+    const goToRoute = (index) => {
+        dispatch({type: ACTIONS.GO_TO_ROUTE, index: index});
+    }
+
+    //Events triggered by filetablerow
+    EventEmitter.on(EventConstants.REMOVE_FILE_BY_ID, (event) => {
+        dispatch({type: event.type, id: event.id, filename: event.filename}) })
+
+    EventEmitter.on(EventConstants.REMOVE_FILE_BY_ID_FAILURE, (event) => {
+        dispatch({type: event.type, filename: event.filename}) })
+
+    EventEmitter.on(EventConstants.FILE_RENAMED_SUCCESSFULLY, (event) => {
+        dispatch({type: event.type, oldName: event.oldName, newName: event.newName}) })
+
+    EventEmitter.on(EventConstants.REMOVE_FILE_BY_ID_FAILURE, (event) => {
+        dispatch({type: event.type, oldName: event.oldName, newName: event.newName}) })
+
+    //Events triggered by folderTablerow
+    EventEmitter.on(EventConstants.DELETE_FOLDER, (event) => {
+        dispatch({type: event.type, id: event.id, folderName: event.folderName}) })
+
+    EventEmitter.on(EventConstants.REMOVE_FILE_BY_ID_FAILURE, (event) => {
+        dispatch({type: event.type, folderName: event.folderName}) })
+
+    EventEmitter.on(EventConstants.GO_BACK, (event) => dispatch({type: event.type}));
 
     useEffect( () => {
         getCurrentUser()
@@ -140,7 +163,7 @@ const MainSection = () => {
 
         <MyBreadcrumbs routes={compState.routes} goTo={goToRoute}/>
 
-        <FilesTable mainDispatcher={memoDispatch} mainRoutes={memoRoutes} files={memoFiles} folders={memoFolders}/>
+        <FilesTable mainRoutes={memoRoutes} files={memoFiles} folders={memoFolders}/>
 
         <NewFolderDialog open={compState.openNewFolder} rootId={compState.rootId} newFolder={newFolder}
             folders={compState.folders}/>
