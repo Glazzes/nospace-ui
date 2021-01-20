@@ -32,12 +32,14 @@ const RenameFileDialog = ({allFiles, file, open, close}) => {
                             type: ACTIONS.FILE_RENAMED_SUCCESSFULLY, oldName: file.filename, newName: values.filename
                         })
                         setSubmitting(false);
+                        close();
                     })
                     .catch(_ => {
                         EventEmitter.emit(EventConstants.FILE_RENAME_FAILURE, {
                             type: ACTIONS.FILE_RENAME_FAILURE, oldName: file.filename, newName: values.filename
                         })
                         setSubmitting(false);
+                        close();
                     })
             }}
             validationSchema={validationSchema}

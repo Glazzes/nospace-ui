@@ -45,11 +45,9 @@ const MainSection = () => {
     const memoFiles = useMemo(() => {
         return compState.files.filter(file => file.filename.toLowerCase().includes(searchItem));
     }, [compState.files, searchItem]);
-
     const memoFolders = useMemo(() => {
         return compState.folders.filter(folder => folder.folderName.toLowerCase().includes(searchItem));
     }, [compState.folders, searchItem]);
-
 
     // Functions triggered by the component
     const newFolder = (action) => {
@@ -65,6 +63,12 @@ const MainSection = () => {
                 dispatch({type: ACTIONS.FAILED_FOLDER_CREATION});
                 break;
         }
+    }
+
+    const calculateNewFilesSize = (files) => {
+        let totalFilesSize = 0;
+        for(let file of files) totalFilesSize+=file.fileSize;
+        return totalFilesSize;
     }
 
     const uploadFiles = (event) => {
@@ -89,7 +93,10 @@ const MainSection = () => {
             });
 
             fileUpload(compState.rootId, formData)
-                .then(response => dispatch({type: ACTIONS.UPLOADED_FILES, files: response.data}) )
+                .then(response => {
+                    dispatch({type: ACTIONS.UPLOADED_FILES, files: response.data});
+                    EventEmitter.emit(EventConstants.UPDATE_STORAGE_USAGE, {usedSpace: calculateNewFilesSize(response.data)});
+                })
                 .catch(_ => dispatch({type: ACTIONS.FALIED_UPLOAD}));
         }else{
             dispatch({type: ACTIONS.RENAME_FILES, errorMessage: failedMessage})
@@ -100,33 +107,35 @@ const MainSection = () => {
         dispatch({type: ACTIONS.GO_TO_ROUTE, index: index});
     }
 
-    //Events triggered by filetablerow
-    EventEmitter.on(EventConstants.REMOVE_FILE_BY_ID, (event) => {
-        dispatch({type: event.type, id: event.id, filename: event.filename}) })
-
-    EventEmitter.on(EventConstants.REMOVE_FILE_BY_ID_FAILURE, (event) => {
-        dispatch({type: event.type, filename: event.filename}) })
-
-    EventEmitter.on(EventConstants.FILE_RENAMED_SUCCESSFULLY, (event) => {
-        dispatch({type: event.type, oldName: event.oldName, newName: event.newName}) })
-
-    EventEmitter.on(EventConstants.REMOVE_FILE_BY_ID_FAILURE, (event) => {
-        dispatch({type: event.type, oldName: event.oldName, newName: event.newName}) })
-
-    //Events triggered by folderTablerow
-    EventEmitter.on(EventConstants.DELETE_FOLDER, (event) => {
-        dispatch({type: event.type, id: event.id, folderName: event.folderName}) })
-
-    EventEmitter.on(EventConstants.REMOVE_FILE_BY_ID_FAILURE, (event) => {
-        dispatch({type: event.type, folderName: event.folderName}) })
-
-    EventEmitter.on(EventConstants.GO_BACK, (event) => dispatch({type: event.type}));
-
     useEffect( () => {
         getCurrentUser()
             .then( response => setState({...state, currentUser: response.data}) )
             .catch( _ => console.log("Couldn't get the files") )
     }, [])
+
+
+    useEffect(() => {
+        EventEmitter.addListener(EventConstants.REMOVE_FILE_BY_ID, function(event){
+            dispatch({type: event.type, id: event.id, filename: event.filename}) });
+
+        EventEmitter.addListener(EventConstants.REMOVE_FILE_BY_ID_FAILURE, function(event){
+            dispatch({type: event.type, filename: event.filename}) });
+
+        EventEmitter.addListener(EventConstants.FILE_RENAMED_SUCCESSFULLY, function(event){
+            dispatch({type: event.type, oldName: event.oldName, newName: event.newName}) });
+
+        EventEmitter.addListener(EventConstants.FILE_RENAME_FAILURE, function(event){
+            dispatch({type: event.type, oldName: event.oldName, newName: event.newName}) });
+
+        EventEmitter.addListener(EventConstants.DELETE_FOLDER, function(event){
+            dispatch({type: event.type, id: event.id, folderName: event.folderName}) })
+        
+        EventEmitter.addListener(EventConstants.REMOVE_FILE_BY_ID_FAILURE, function(event){
+            dispatch({type: event.type, folderName: event.folderName}) })
+        
+        EventEmitter.addListener(EventConstants.GO_BACK, function(event){dispatch({type: event.type})});
+    }, [])
+
 
     useEffect( () => {
         getCurrentContent(compState.routes)

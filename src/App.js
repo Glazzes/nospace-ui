@@ -1,7 +1,6 @@
 import './logo.svg'
 import MainMenu from "./components/MainMenu";
 import { BrowserRouter, Route } from 'react-router-dom';
-import Test from './components/Test';
 import Login from "./components/Login";
 import SignUp from './components/SignUp';
 import Settings from './components/Settings';

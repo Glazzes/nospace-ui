@@ -7,6 +7,7 @@ import {GlobalContext} from './GlobalState';
 import { getCurrentUser } from '../utils/UserUtils';
 import {getUsedSpace, convertBytesToReadableSize} from '../utils/FolderUtils';
 import {Skeleton} from "@material-ui/lab";
+import EventEmitter, {EventConstants} from '../utils/EventEmitter';
 
 const MainMenu = () => {
     const classes = useStyles();
@@ -32,6 +33,14 @@ const MainMenu = () => {
         .catch(_ => console.log("Todo bien"))
 
     }, [] )
+
+
+    useEffect(() => {
+        EventEmitter.addListener(EventConstants.UPDATE_STORAGE_USAGE, function({usedSpace}){
+          setSpace(prevSpace => prevSpace + usedSpace) });
+
+        return () => EventEmitter.removeCurrentListener();
+    }, [])
 
     return (
         <>
