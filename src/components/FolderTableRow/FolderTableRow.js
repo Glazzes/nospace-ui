@@ -20,20 +20,23 @@ import EventEmitter, {EventConstants} from "../../utils/EventEmitter";
 import MainSectionActions from "../MainSection/MainSecionActions";
 import FolderTableRowActions from "./FolderTableRowActions";
 import folderTableRowReducer from "./FolderTableRowReducer";
+import RenameFolderDialog from "./RenameFolderDialog";
 
 const initialState = {
     openMenu: false,
     displayWarning: false,
     anchorEl: null,
     folderSnackbar: {content: "", type: "", isOpen: false},
-    isDeleteFileButtonDisabled: false
+    isDeleteFileButtonDisabled: false,
+    openRenameFolderDialog: false
 }
 
-const FileTableRow = ({folder}) => {
+const FileTableRow = ({allFolders, folder}) => {
     const classes = useStyles();
     const [state, dispatch] = useReducer(folderTableRowReducer, initialState);
 
-    const updateRoutes = (name) => EventEmitter.emit(EventConstants.ADD_NEW_ROUTE, {route: name});
+    const updateRoutes = (name) => EventEmitter.emit(EventConstants.ADD_NEW_ROUTE, {
+        type: MainSectionActions.ADD_NEW_ROUTE, newRoute: name} );
 
     const download = () => {
         downloadFolder(folder.id)
@@ -87,6 +90,7 @@ const FileTableRow = ({folder}) => {
             onClose={() => dispatch({type: FolderTableRowActions.CLOSE_MENU})}
         >
             <MenuItem onClick={download}>Download</MenuItem>
+            <MenuItem onClick={() => dispatch({type: FolderTableRowActions.OPEN_RENAME_DIALOG})}>Rename folder</MenuItem>
             <MenuItem onClick={() => dispatch({type: FolderTableRowActions.DISPLAY_WARNING})}>Delete</MenuItem>
         </Menu>
 
@@ -108,6 +112,9 @@ const FileTableRow = ({folder}) => {
                 </Button>
             </DialogActions>
         </Dialog>
+
+        <RenameFolderDialog allFolders={allFolders} open={state.openRenameFolderDialog} folder={folder}
+                            close={() => dispatch({type: FolderTableRowActions.CLOSE_RENAME_DIALOG})}/>
         </>
     )
 }

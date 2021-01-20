@@ -98,6 +98,23 @@ const mainSectionReducer = (state, action) => {
             return {...state, snackContent: {content: `Couldn't rename ${action.oldName} to ${action.newName}`,
                     type: "error"}, openSnack: true};
 
+        case MainSectionActions.FOLDER_RENAMED_SUCCESSFULLY:
+            const renamedAppliedFolders = state.folders.map(folder => {
+                if(folder.folderName === action.oldName) folder.folderName = action.newName;
+                return folder;
+            });
+
+            return {...state, snackContent: {content: `Folder ${action.oldName} renamed to ${action.newName}`,
+                    type: "success"}, openSnack: true, folders: renamedAppliedFolders};
+
+        case MainSectionActions.FOLDER_RENAMED_FAILURE:
+            return {...state, snackContent: {content: `Couldn't rename ${action.oldName} to ${action.newName}`,
+                    type: "error"}, openSnack: true};
+
+        case MainSectionActions.FILE_DOWNLOAD_FAILURE:
+            return {...state, snackContent: {content: `Something went wrong, could not download file ${action.filename}`,
+                    type: "error"}, openSnack: true};
+
         default:
             return state;
     }

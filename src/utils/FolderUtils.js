@@ -16,7 +16,11 @@ export const getCurrentContent = (routes) => {
 
 export const createNewFolder = (currentFolderId, name) => {
     const url = `${BASE_URL}/content/new?name=${name}&baseId=${currentFolderId}`;
-    console.log(`Sending request tot ${url}`);
+    return axios.post(url, {}, {withCredentials: true});
+}
+
+export const renameFolder = (currentFolderId, newName) => {
+    const url = `${BASE_URL}/content/${currentFolderId}/rename?folderName=${newName}`;
     return axios.post(url, {}, {withCredentials: true});
 }
 

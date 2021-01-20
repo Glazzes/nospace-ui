@@ -1,12 +1,12 @@
 import React from 'react';
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@material-ui/core";
 import {Form, Formik, useField} from "formik";
-import {renameFile} from "../utils/FileUtils";
+import {renameFile} from "../../utils/FileUtils";
 import * as yup from 'yup';
-import {useStyles} from "../styles/MainSectionStyles";
-import EventEmitter from "../utils/EventEmitter";
-import {EventConstants} from "../utils/EventEmitter";
-import ACTIONS from "./MainSection/MainSecionActions";
+import {useStyles} from "../../styles/MainSectionStyles";
+import EventEmitter from "../../utils/EventEmitter";
+import {EventConstants} from "../../utils/EventEmitter";
+import ACTIONS from "../MainSection/MainSecionActions";
 
 const validationSchema = yup.object({
     filename: yup.string().required()

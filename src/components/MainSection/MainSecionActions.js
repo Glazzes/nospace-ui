@@ -24,7 +24,11 @@ const MainSectionActions = {
     FILTER_CONTENT: "filter_content",
     RENAME_FILES: "rename_files",
     FILE_RENAMED_SUCCESSFULLY: "file_renamed_successfully",
-    FILE_RENAME_FAILURE: "file_rename_failure"
+    FILE_RENAME_FAILURE: "file_rename_failure",
+    FOLDER_RENAMED_SUCCESSFULLY: "folder_renamed_successfully",
+    FOLDER_RENAMED_FAILURE: "folder_renamed_failure",
+    FILE_DOWNLOAD_FAILURE: "file_download_failure",
+    FOLDER_DOWNLOAD_FAILURE: "folder_download_failure"
 }
 
 export default MainSectionActions;

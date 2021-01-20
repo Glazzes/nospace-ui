@@ -14,10 +14,8 @@ import {useStyles} from '../../styles/TableRowStyles';
 import React, {useReducer} from 'react'
 import {deleteFile, downloadFile} from '../../utils/FileUtils';
 import {convertBytesToReadableSize} from '../../utils/FolderUtils';
-import RenameFileDialog from "../RenameFileDialog";
-import EventEmitter from "../../utils/EventEmitter";
-import {EventConstants} from "../../utils/EventEmitter";
-
+import RenameFileDialog from "./RenameFileDialog";
+import EventEmitter, {EventConstants} from "../../utils/EventEmitter";
 import FilesTableRowActions from "./FilesTableRowActions";
 import filesTableRowReducer from "./FilesTableRowReducer";
 
@@ -59,30 +57,32 @@ const FileTableRow = ({allFiles, file}) => {
                 link.click();
             })
             .catch(_ => {
-                console.log("Something went wrong while downloading the file");
+                dispatch({type: FilesTableRowActions.CLOSE_MENU});
+                EventEmitter.emit(EventConstants.FILE_DOWNLOAD_FAILURE, {
+                    type: MainSectionActions.FILE_DOWNLOAD_FAILURE, filename: file.filename });
             })
     }
 
     return (
         <>
-                <TableRow>
-                    <TableCell className={classes.title}>
-                        <Box className={classes.titleBox}>
-                            <FileCopy className={classes.fileIcon} />
+            <TableRow>
+                <TableCell className={classes.title}>
+                    <Box className={classes.titleBox}>
+                        <FileCopy className={classes.fileIcon} />
                             <Typography>{file.filename}</Typography>
-                        </Box>
-                    </TableCell>
-                    <Hidden mdDown>
-                        <TableCell>{convertBytesToReadableSize(file.fileSize)}</TableCell>
-                        <TableCell>{file.uploadedAt}</TableCell>
-                    </Hidden>
-                    <TableCell>
-                        <IconButton aria-controls="options"
-                                    onClick={(event) => dispatch({type: FilesTableRowActions.OPEN_MENU, anchorEl: event})}>
-                            <MoreHoriz fontSize="small"/>
-                        </IconButton>
-                    </TableCell>
-                </TableRow>
+                    </Box>
+                </TableCell>
+                <Hidden mdDown>
+                    <TableCell>{convertBytesToReadableSize(file.fileSize)}</TableCell>
+                    <TableCell>{file.uploadedAt}</TableCell>
+                </Hidden>
+                <TableCell>
+                    <IconButton aria-controls="options"
+                        onClick={(event) => dispatch({type: FilesTableRowActions.OPEN_MENU, anchorEl: event})}>
+                        <MoreHoriz fontSize="small"/>
+                    </IconButton>
+                </TableCell>
+            </TableRow>
 
         <Menu id="options" anchorOrigin={{vertical: "bottom", horizontal: "left"}}
             open={state.openMenu} anchorEl={state.anchorEl} 

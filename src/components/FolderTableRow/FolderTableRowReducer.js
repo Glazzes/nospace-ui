@@ -20,6 +20,12 @@ function folderTableRowReducer(state, action){
         case FolderTableRowActions.DISABLE_DELETE_BUTTON:
             return {...state, isDeleteFileButtonDisabled: true};
 
+        case FolderTableRowActions.OPEN_RENAME_DIALOG:
+            return {...state, openRenameFolderDialog: true, openMenu: false};
+
+        case FolderTableRowActions.CLOSE_RENAME_DIALOG:
+            return {...state, openRenameFolderDialog: false};
+
         default:
             return state;
     }

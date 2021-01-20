@@ -45,6 +45,7 @@ const MainSection = () => {
     const memoFiles = useMemo(() => {
         return compState.files.filter(file => file.filename.toLowerCase().includes(searchItem));
     }, [compState.files, searchItem]);
+    
     const memoFolders = useMemo(() => {
         return compState.folders.filter(folder => folder.folderName.toLowerCase().includes(searchItem));
     }, [compState.folders, searchItem]);
@@ -115,6 +116,9 @@ const MainSection = () => {
 
 
     useEffect(() => {
+        EventEmitter.addListener(EventConstants.ADD_NEW_ROUTE, function (event){
+            dispatch({type: event.type, route: event.newRoute}); })
+
         EventEmitter.addListener(EventConstants.REMOVE_FILE_BY_ID, function(event){
             dispatch({type: event.type, id: event.id, filename: event.filename}) });
 
@@ -127,13 +131,23 @@ const MainSection = () => {
         EventEmitter.addListener(EventConstants.FILE_RENAME_FAILURE, function(event){
             dispatch({type: event.type, oldName: event.oldName, newName: event.newName}) });
 
+        EventEmitter.addListener(EventConstants.FOLDER_RENAMED_SUCCESSFULLY, function (event){
+            dispatch({type: event.type, oldName: event.oldName, newName: event.newName}) })
+
+        EventEmitter.addListener(EventConstants.FOLDER_RENAMED_FAILURE, function (event){
+            dispatch({type: event.type, oldName: event.oldName, newName: event.newName}) });
+
         EventEmitter.addListener(EventConstants.DELETE_FOLDER, function(event){
             dispatch({type: event.type, id: event.id, folderName: event.folderName}) })
         
         EventEmitter.addListener(EventConstants.REMOVE_FILE_BY_ID_FAILURE, function(event){
             dispatch({type: event.type, folderName: event.folderName}) })
+
+        EventEmitter.addListener(EventConstants.FILE_DOWNLOAD_FAILURE, function(event){
+            dispatch({type: event.type, filename: event.filename}) });
         
-        EventEmitter.addListener(EventConstants.GO_BACK, function(event){dispatch({type: event.type})});
+        EventEmitter.addListener(EventConstants.GO_BACK, function(event){
+            dispatch({type: event.type, filename: event.filename}) });
     }, [])
 
 

@@ -27,7 +27,7 @@ const FilesTable = ({mainRoutes, files, folders}) => {
                 </TableHead>
                 <TableBody>
                     {mainRoutes.length > 1 && <GoBackCell />}
-                    {folders.map( folder => <FolderTableRow key={folder.id} folder={folder} />)}
+                    {folders.map( folder => <FolderTableRow key={folder.id} folder={folder} allFolders={folders}/>)}
                     {files.map( file => <FileTableRow key={file.id} file={file} allFiles={files} />)}
                 </TableBody>
             </Table>
